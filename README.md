@@ -10,5 +10,9 @@ A [Work In Progress paper was accepted at EMOOCs 2017](https://arxiv.org/abs/170
 - [x] Create screen mockups
 - [x] Create github site and django project
 - [ ] Create django models
+- [ ] Create restful api
+- [ ] Integrate with a django LTI lib
 - [ ] Implement forms for instructor ui
 - [ ] Implement forms and ui for learners
+- [ ] Integrate with a deep learning similarity model
+- [ ] Implement instructor moderation and feedback ui
