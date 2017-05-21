@@ -10,6 +10,7 @@ A [Work In Progress paper was accepted at EMOOCs 2017](https://arxiv.org/abs/170
 - [x] Create screen mockups
 - [x] Create github site and django project
 - [x] Create django models
+- [x] Define django admin ui for models
 - [ ] Create restful api
 - [ ] Integrate with a django LTI lib
 - [ ] Implement forms for instructor ui
