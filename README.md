@@ -9,7 +9,7 @@ A [Work In Progress paper was accepted at EMOOCs 2017](https://arxiv.org/abs/170
 ## Developer Todo List
 - [x] Create screen mockups
 - [x] Create github site and django project
-- [ ] Create django models
+- [x] Create django models
 - [ ] Create restful api
 - [ ] Integrate with a django LTI lib
 - [ ] Implement forms for instructor ui
