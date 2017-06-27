@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Learner ALternative</title>
+
+    <meta name="description" content="Source code generated using layoutit.com">
+    <meta name="author" content="LayoutIt!">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+  </head>
+  <body>
+
+    <div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<h3>
+				Four Futures for China
+			</h3>
+<div class="well well-sm">
+      <form class="form-horizontal">
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="email">Global mining commodity demand:</label>
+          <div class="col-sm-10">
+          <input type="range" id="rangeInput1" name="rangeInput1" step="1" min="1" max="3" value="1"><label id="rangeText1" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="email">Socio-environmental regulation:</label>
+          <div class="col-sm-10">
+          <input type="range" id="rangeInput2" name="rangeInput2" step="1" min="1" max="3" value="1"><label id="rangeText2" />
+          </div>
+        </div>
+        <!--
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="pwd">Enter Ideas:</label>
+          <div class="col-sm-10">
+            <textarea class="form-control" rows="4" id="comment"></textarea>
+          </div>
+        </div> -->
+        <div class="form-group col-sm-12">
+          <div class="alert alert-info ">
+            <strong>Perspective Contribution:</strong>
+            <br/> <br/>
+            <button type="button" class="btn btn-info">
+              <span class="glyphicon glyphicon-plus"></span> Add New Item
+            </button>
+            <br/> <br/><p>
+            <input type="text" class="form-control" id="email"><br/>
+            <input type="text" class="form-control" id="email"><br/>
+            <input type="text" class="form-control" id="email"><br/>
+            <input type="text" class="form-control" id="email">
+            </p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="pwd">Settings:</label>
+          <div class="col-sm-10">
+            <div class="checkbox">
+              <label><input type="checkbox"> Share with course participants</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary">Save</button> &nbsp <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </form>
+</div>
+		</div>
+	</div>
+</div>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/scripts.js"></script>
+    <script>
+      var rangeValues =
+      {
+          "1": "Low",
+          "2": "Medium",
+          "3": "High",
+      };
+      var rangeValues2 =
+      {
+          "1": "Light",
+          "2": "Medium",
+          "3": "Heavy",
+      };
+
+      $(function () {
+
+          // on page load, set the text of the label based the value of the range
+          $('#rangeText1').text(rangeValues[$('#rangeInput1').val()]);
+
+          // setup an event handler to set the text when the range value is dragged (see event for input) or changed (see event for change)
+          $('#rangeInput1').on('input change', function () {
+              $('#rangeText1').text(rangeValues[$(this).val()]);
+          });
+
+
+          // on page load, set the text of the label based the value of the range
+          $('#rangeText2').text(rangeValues2[$('#rangeInput2').val()]);
+
+          // setup an event handler to set the text when the range value is dragged (see event for input) or changed (see event for change)
+          $('#rangeInput2').on('input change', function () {
+              $('#rangeText2').text(rangeValues2[$(this).val()]);
+          });
+      });
+    </script>
+  </body>
+</html>
