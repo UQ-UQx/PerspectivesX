@@ -1,10 +1,15 @@
 from django import forms
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from crispy_forms.bootstrap import FormActions
 from models import Template, TemplateItem, Activity
 
 class ActivityForm(forms.ModelForm):
-    title = forms.CharField(max_length = 5000, help_text= "Title:")
-    description = forms.CharField(help_text = "Decription:")
-    template = forms.ModelChoiceField(queryset = Template.objects.all() ,help_text= "Activity template:")
+
+
+    title = forms.CharField(max_length = 5000, label= "Title:")
+    description = forms.CharField(label = "Decription:")
+    template = forms.ModelChoiceField(queryset = Template.objects.all() ,label= "Choose activity template:")
 
     SELECTED = 'Allow learners to choose a perspective'
     RANDOM = 'Randomly assign a perspective for learner'
@@ -14,7 +19,7 @@ class ActivityForm(forms.ModelForm):
         (RANDOM, RANDOM),
         (ALL, ALL)
     )
-    learner_contribution = forms.ChoiceField(choices = PERSPECTIVE_SELECTION_OPTIONS, help_text= "Learner Contribution:",
+    learner_contribution = forms.ChoiceField(choices = PERSPECTIVE_SELECTION_OPTIONS, label= "Learner Contribution:",
                                              widget= forms.RadioSelect)
 
     SELECTED = 'Allow learners to choose a perspective to curate'
@@ -25,7 +30,7 @@ class ActivityForm(forms.ModelForm):
         (RANDOM, RANDOM),
         (ALL, ALL)
     )
-    learner_curation = forms.ChoiceField(choices=PERSPECTIVE_CURATION_OPTIONS, help_text= "Learner Curation:",
+    learner_curation = forms.ChoiceField(choices=PERSPECTIVE_CURATION_OPTIONS, label= "Learner Curation:",
                                          widget= forms.RadioSelect)
 
     ENABLE = 'Enable Search'
@@ -36,11 +41,36 @@ class ActivityForm(forms.ModelForm):
         (SUMMARIZE, SUMMARIZE),
         (VIEW, VIEW)
     )
-    kb_setting = forms.ChoiceField(choices =KB_SETTINGS_OPTIONS, help_text= "Kwowledge Base Setting:",
+    kb_setting = forms.ChoiceField(choices =KB_SETTINGS_OPTIONS, label= "Kwowledge Base Setting:",
                                    widget=forms.RadioSelect)
+    contribution_score = forms.IntegerField(label ="Contribution Score", initial = 50)
+    curation_score = forms.IntegerField(label= "Curation Score", initial = 50)
+    minimum_contributions = forms.IntegerField(label= "Minimum Contributions", initial = 3 )
+    minimum_curations = forms.IntegerField(label = "Minimum Curated Response", initial = 3)
+
+    def __init__(self, *args, **kwargs):
+        super(ActivityForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_action = 'perspectivesX/add_activity/'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = "control-label col-sm-2"
+        self.helper.field_class = "col-sm-10"
+        self.helper.layout = Layout(
+            Fieldset(
+                "",'title','description','template','learner_contribution','learner_curation','kb_setting',
+                'contribution_score','curation_score','minimum_contributions','minimum_curations'
+            ),
+            FormActions(
+                Submit('Add Activity', 'Add Activity')
+            )
+        )
+
+
 
     class Meta:
         #associate activity Form with an Activity
         model = Activity
-        fields= ('title','description','template','learner_contribution','learner_curation','kb_setting')
+        fields= ('title','description','template','learner_contribution','learner_curation','kb_setting',
+                 'contribution_score','curation_score','minimum_contributions','minimum_curations')
 
