@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import Template, TemplateItem, Activity, LearnerSubmission, LearnerPerspective
+from models import Template, TemplateItem, Activity, LearnerSubmissionItem, LearnerPerspectiveSubmission
 
 # Register your models here.
 class TemplateAdmin(admin.ModelAdmin):
-    list_display = ('name')
-    search_fields = ('name')
+    list_display = ('name',)
+    search_fields = ('name',)
 
 class TemplateItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'template')
@@ -25,5 +25,5 @@ class LearnerPerspectiveAdmin(admin.ModelAdmin):
 admin.site.register(Template, TemplateAdmin)
 admin.site.register(TemplateItem, TemplateItemAdmin)
 admin.site.register(Activity, ActivityAdmin)
-admin.site.register(LearnerSubmission, LearnerSubmissionAdmin)
-admin.site.register(LearnerPerspective, LearnerPerspectiveAdmin)
+admin.site.register(LearnerSubmissionItem, LearnerSubmissionAdmin)
+admin.site.register(LearnerPerspectiveSubmission, LearnerPerspectiveAdmin)
