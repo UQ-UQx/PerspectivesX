@@ -10,6 +10,7 @@ def add_activity(request):
         form = ActivityForm(request.POST)
         if form.is_valid():
             form.save(commit =True)
+            return index(request)
         else:
             print form.errors
     else:

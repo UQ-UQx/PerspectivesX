@@ -1,14 +1,14 @@
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
-from crispy_forms.bootstrap import FormActions
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row
+from crispy_forms.bootstrap import FormActions,InlineRadios,PrependedText, InlineField,StrictButton
 from models import Template, TemplateItem, Activity
 
 class ActivityForm(forms.ModelForm):
 
 
     title = forms.CharField(max_length = 5000, label= "Title:")
-    description = forms.CharField(label = "Decription:")
+    description = forms.CharField(label = "Decription:", widget= forms.Textarea)
     template = forms.ModelChoiceField(queryset = Template.objects.all() ,label= "Choose activity template:")
 
     SELECTED = 'Allow learners to choose a perspective'
@@ -53,14 +53,20 @@ class ActivityForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_action = 'perspectivesX/add_activity/'
-        self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = "control-label col-sm-2"
-        self.helper.field_class = "col-sm-10"
+        self.helper.form_class = "form-horizontal"
+        self.helper.field_class ='col-sm-10'
+        self.helper.label_class = 'control-label col-sm-2'
         self.helper.layout = Layout(
             Fieldset(
-                "",'title','description','template','learner_contribution','learner_curation','kb_setting',
-                'contribution_score','curation_score','minimum_contributions','minimum_curations'
-            ),
+            "",'title','description','template',
+            FormActions(
+                HTML("OR &emsp; "),
+                StrictButton("Create Custrom Template", name="create template",
+                            value="create template",css_class= 'create-template')),
+           'learner_contribution','learner_curation','kb_setting',
+            PrependedText('contribution_score', '%', active=True),
+            PrependedText('curation_score','%',active= True),'minimum_contributions','minimum_curations'
+             ),
             FormActions(
                 Submit('Add Activity', 'Add Activity')
             )

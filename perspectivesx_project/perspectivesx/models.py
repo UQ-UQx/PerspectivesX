@@ -30,7 +30,7 @@ class Activity(models.Model):
     '''
     Model for Acitivy that uses a PerspectivesX Template.
     '''
-    name = models.CharField(max_length=5000, blank=False, verbose_name="Activity Name")
+    title = models.CharField(max_length=5000, blank=False, verbose_name="Activity Name")
     description = models.TextField(blank=False)
 
     template = models.ForeignKey(Template)
@@ -51,7 +51,7 @@ class Activity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.name
+        return self.title
 
 class LearnerSubmissionItem(models.Model):
     '''

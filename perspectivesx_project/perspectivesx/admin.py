@@ -11,8 +11,8 @@ class TemplateItemAdmin(admin.ModelAdmin):
     search_fields = ('name', 'template')
 
 class ActivityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'template')
-    search_fields = ('name', 'template')
+    list_display = ('title', 'template')
+    search_fields = ('title', 'template')
 
 class LearnerSubmissionAdmin(admin.ModelAdmin):
     list_display = ('item', 'position', 'template_item', 'activity')
