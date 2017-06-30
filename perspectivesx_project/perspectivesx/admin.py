@@ -13,6 +13,7 @@ class TemplateItemAdmin(admin.ModelAdmin):
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('title', 'template')
     search_fields = ('title', 'template')
+    prepopulated_fields = {'slug': ('title',)}
 
 class LearnerSubmissionAdmin(admin.ModelAdmin):
     list_display = ('item', 'position', 'template_item', 'activity')

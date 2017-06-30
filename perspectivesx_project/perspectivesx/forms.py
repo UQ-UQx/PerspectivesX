@@ -2,7 +2,7 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row
 from crispy_forms.bootstrap import FormActions,InlineRadios,PrependedText, InlineField,StrictButton
-from models import Template, TemplateItem, Activity
+from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission
 
 class ActivityForm(forms.ModelForm):
 
@@ -79,4 +79,41 @@ class ActivityForm(forms.ModelForm):
         model = Activity
         fields= ('title','description','template','learner_contribution','learner_curation','kb_setting',
                  'contribution_score','curation_score','minimum_contributions','minimum_curations')
+
+
+class LearnerForm(forms.ModelForm):
+    perspective_selection = forms.ModelChoiceField(queryset= [], label = 'Choose a perspective')
+    NOSHARE = "Don't Share"
+    ANON = 'Share Anonymously'
+    SHARE = 'Share with other learners'
+    SHARE_OPTIONS = (
+        (NOSHARE, NOSHARE),
+        (ANON, ANON),
+        (SHARE, SHARE)
+    )
+    sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings')
+    def __init__(self,*args, **kwargs):
+        self.template_name = kwargs.pop('template_name')
+        super(LearnerForm, self).__init__(*args, **kwargs)
+        self.fields['perspective_selection']  = forms.ModelChoiceField(queryset=TemplateItem.objects.filter(
+            template = Template.objects.filter(name= self.template_name)),
+            label="Choose a perspective:", widget = forms.RadioSelect, empty_label= None)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_action = 'perspectivesX/learner_submission/'
+        self.helper.form_class = "form-horizontal"
+        self.helper.field_class = 'col-sm-10'
+        self.helper.label_class = 'control-label col-sm-2'
+        self.helper.layout = Layout(
+            Fieldset("",
+               InlineRadios('perspective_selection'),InlineRadios('sharing'),
+            ),
+            FormActions(
+                Submit('Submit', 'Submit'),
+            )
+        )
+    class Meta:
+        model = LearnerPerspectiveSubmission
+        fields = ('perspective_selection','sharing')
+
 
