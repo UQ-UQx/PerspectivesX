@@ -1,8 +1,9 @@
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row,Hidden
 from crispy_forms.bootstrap import FormActions,InlineRadios,PrependedText, InlineField,StrictButton
-from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission
+from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission,LearnerSubmissionItem
+from formsetlayout import Formset as FormSetLayout
 
 class ActivityForm(forms.ModelForm):
 
@@ -52,7 +53,7 @@ class ActivityForm(forms.ModelForm):
         super(ActivityForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        self.helper.form_action = 'perspectivesX/add_activity/'
+        self.helper.form_action = '/perspectivesX/add_activity/'
         self.helper.form_class = "form-horizontal"
         self.helper.field_class ='col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
@@ -80,9 +81,33 @@ class ActivityForm(forms.ModelForm):
         fields= ('title','description','template','learner_contribution','learner_curation','kb_setting',
                  'contribution_score','curation_score','minimum_contributions','minimum_curations')
 
+class LearnerSubmissionItemForm(forms.ModelForm):
+    #Item stores the learner's contribution (entry) for this Item
+    item = forms.CharField(label ="")
+    #Position stores the position of the item (index of the contribution)
+    position = forms.IntegerField()
+    #learner_submission maps the item to the relevant learner submission
+    learner_submission = forms.ModelChoiceField(queryset = LearnerPerspectiveSubmission.objects.all())
+
+    def __init__(self,*args,**kwargs):
+
+        self.learner_submission = kwargs.get('learner_submission','')
+        self.position = kwargs.get('position','')
+        # call super.__init__()
+        super(LearnerSubmissionItemForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Fieldset('','item',Hidden('position','0'),Hidden('learner_submission','0')),)
+
+    class Meta:
+        model = LearnerSubmissionItem
+        fields = ('item', 'position', 'learner_submission',)
+
 
 class LearnerForm(forms.ModelForm):
+    #perspective_selection stores the perspective choosen by the learner
     perspective_selection = forms.ModelChoiceField(queryset= [], label = 'Choose a perspective')
+
     NOSHARE = "Don't Share"
     ANON = 'Share Anonymously'
     SHARE = 'Share with other learners'
@@ -91,29 +116,40 @@ class LearnerForm(forms.ModelForm):
         (ANON, ANON),
         (SHARE, SHARE)
     )
+    #sharing stores the share mode selected by the user
     sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings')
+    #activity maps the submission to the undertaken activity
+    activity = forms.ModelChoiceField(queryset=[Activity.objects.all])
+
     def __init__(self,*args, **kwargs):
+
+        #retrive args from kwargs array
         self.template_name = kwargs.pop('template_name')
+        self.activity = kwargs.pop('activity')
+        # call super.__init__()
         super(LearnerForm, self).__init__(*args, **kwargs)
+
         self.fields['perspective_selection']  = forms.ModelChoiceField(queryset=TemplateItem.objects.filter(
             template = Template.objects.filter(name= self.template_name)),
             label="Choose a perspective:", widget = forms.RadioSelect, empty_label= None)
+        self.fields['activity'].initial = self.activity
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        self.helper.form_action = 'perspectivesX/learner_submission/'
+        self.helper.form_action = '/perspectivesX/submission/{}/'.format(self.activity.slug)
         self.helper.form_class = "form-horizontal"
         self.helper.field_class = 'col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
         self.helper.layout = Layout(
             Fieldset("",
-               InlineRadios('perspective_selection'),InlineRadios('sharing'),
+               InlineRadios('perspective_selection'),FormSetLayout('formset'),InlineRadios('sharing'),
+                     Field('activity',type ="hidden")
             ),
             FormActions(
-                Submit('Submit', 'Submit'),
+                Submit("Save","Save"),Submit('Submit', 'Submit'),
             )
         )
     class Meta:
         model = LearnerPerspectiveSubmission
-        fields = ('perspective_selection','sharing')
+        fields = ('perspective_selection','sharing','activity')
 
 

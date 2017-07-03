@@ -16,12 +16,12 @@ class ActivityAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
 
 class LearnerSubmissionAdmin(admin.ModelAdmin):
-    list_display = ('item', 'position', 'template_item', 'activity')
-    search_fields = ('item', 'position', 'template_item', 'activity')
+    list_display = ('item', 'position', 'learner_submission')
+    search_fields = ('item', 'position', 'learner_submission')
 
 class LearnerPerspectiveAdmin(admin.ModelAdmin):
-    list_display = ('template_item', 'activity', 'perspective_selection')
-    search_fields = ('template_item', 'activity', 'perspective_selection')
+    list_display = ('selected_perspective', 'activity',)
+    search_fields = ('selected_perspective', 'activity',)
 
 admin.site.register(Template, TemplateAdmin)
 admin.site.register(TemplateItem, TemplateItemAdmin)

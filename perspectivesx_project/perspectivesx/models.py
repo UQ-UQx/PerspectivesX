@@ -74,21 +74,10 @@ class LearnerPerspectiveSubmission(models.Model):
     '''
     Model to store how a learner submission is assigned to a particular perspective.
     '''
-    #template_item is the perspective selected by the learner
-    template_item = models.ForeignKey(TemplateItem)
+    #selected_perspective is the perspective selected by the learner
+    selected_perspective = models.ForeignKey(TemplateItem)
     #Activity undertaken by the learner
     activity = models.ForeignKey(Activity)
-
-
-    # Define selection mode
-    SELECTED = "Learner Selected"
-    RANDOM = 'Randomly Assigned'
-    ALL = 'Assigned'
-    PERSPECTIVE_SELECTION_OPTIONS = (
-            (SELECTED, SELECTED),
-            (RANDOM, RANDOM),
-            (ALL, ALL)
-    )
 
     #Define share mode
     NOSHARE = "Don't Share"
@@ -101,7 +90,6 @@ class LearnerPerspectiveSubmission(models.Model):
     )
 
     sharing = models.CharField(max_length=100, choices=SHARE_OPTIONS, default=SHARE)
-    perspective_selection = models.CharField(max_length=100, choices=PERSPECTIVE_SELECTION_OPTIONS, default=SELECTED)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class LearnerSubmissionItem(models.Model):
@@ -112,18 +100,14 @@ class LearnerSubmissionItem(models.Model):
     # Stores the item entry from the user
     item = models.CharField(max_length=5000, blank=False, verbose_name="Item Name")
 
-    #description might not be relevant anymore.
-    description = models.TextField(blank=True)
-
     # Position of item in learner submission
     position = models.PositiveSmallIntegerField(blank=True, null=True)
 
     learner_submission = models.ForeignKey(LearnerPerspectiveSubmission)
-    template_item = models.ForeignKey(TemplateItem)
-    activity = models.ForeignKey(Activity)
 
     created_by = models.OneToOneField(User)
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 
     def __unicode__(self):
