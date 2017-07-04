@@ -98,6 +98,7 @@ class LearnerSubmissionItemForm(forms.ModelForm):
         if('position' in kwargs):
             self.learner_submission = kwargs.pop('learner_submission')
             self.position = kwargs.pop('position')
+            print( "\n\nReceived args : {} {} \n\n".format(self.learner_submission,self.position))
 
         # call super.__init__() make sure the position/learner submission kwargs are not there anymore
         super(LearnerSubmissionItemForm, self).__init__(*args, **kwargs)

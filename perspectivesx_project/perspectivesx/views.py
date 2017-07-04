@@ -63,6 +63,7 @@ def student_submission(request,activity_name_slug):
             formset = input_form_set(request.POST,form_kwargs = {'learner_submission' : submission.id,
                                                          'position' : 0})
             context_dict['formset'] = formset
+            # print(formset)
             #if formset is valud
             if formset.is_valid():
                 #Save submited items from formset
