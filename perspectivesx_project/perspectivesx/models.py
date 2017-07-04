@@ -63,6 +63,13 @@ class Activity(models.Model):
     view_knowledge_base_before_sumbmission = models.BooleanField(blank=False, default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    contribution_score = models.IntegerField(default = 50)
+    curation_score = models.IntegerField(default =50)
+    minimum_contribution = models.IntegerField(default = 3)
+    minimum_curation = models.IntegerField(default = 3)
+
+
+
     def save(self,*args,**kwargs):
         self.slug = slugify(self.title)
         super(Activity,self).save(*args,**  kwargs)

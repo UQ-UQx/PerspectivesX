@@ -4,6 +4,7 @@ from forms import ActivityForm,LearnerForm,LearnerSubmissionItemForm
 from functools import partial, wraps
 from django.forms import formset_factory
 from models import Activity,Template,TemplateItem
+# import pdb; pdb.set_trace()
 
 def index(request):
     """
@@ -54,22 +55,22 @@ def student_submission(request,activity_name_slug):
         #if form is valid
         if form.is_valid():
             #retrive submission meta
-            submission = form.save(commit= False)
+            submission = form.save(commit= True)
+
             #create formset with relevant information taken from submission meta
-            input_form_set = formset_factory(
-                wraps(LearnerSubmissionItemForm)(partial(LearnerSubmissionItemForm,
-                                                         learner_submission = submission.id,
-                                                         position = 0)), extra=3)
-            formset = input_form_set(request.POST, instance =  submission)
+            input_form_set = formset_factory(LearnerSubmissionItemForm,extra = 3, max_num = 0)
+
+            formset = input_form_set(request.POST,form_kwargs = {'learner_submission' : submission.id,
+                                                         'position' : 0})
             context_dict['formset'] = formset
             #if formset is valud
             if formset.is_valid():
                 #Save submited items from formset
                 formset.save(commit = True)
-                #save submission meta information
-                submission.save(commit = True)
                 return index(request)
             else:
+                #Something went wrong when validating the formset remove the submission
+                submission.delete()
                 print formset.errors
         else:
             print form.errors
