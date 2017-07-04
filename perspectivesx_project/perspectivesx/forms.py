@@ -2,7 +2,7 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row,Hidden
 from crispy_forms.bootstrap import FormActions,InlineRadios,PrependedText, InlineField,StrictButton
-from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission,LearnerSubmissionItem
+from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission,LearnerSubmissionItem,User
 from formsetlayout import Formset as FormSetLayout
 
 class ActivityForm(forms.ModelForm):
@@ -85,29 +85,13 @@ class LearnerSubmissionItemForm(forms.ModelForm):
     #Item stores the learner's contribution (entry) for this Item
     item = forms.CharField(label ="")
     #Position stores the position of the item (index of the contribution)
-    position = forms.IntegerField(widget = forms.HiddenInput)
+    position = forms.IntegerField(widget = forms.HiddenInput, required = False)
     #learner_submission maps the item to the relevant learner submission
     learner_submission = forms.ModelChoiceField(queryset = LearnerPerspectiveSubmission.objects.all(),
-                                                widget = forms.HiddenInput)
+                                                widget = forms.HiddenInput, required = False)
 
     def __init__(self,*args,**kwargs):
-        #start by defining self.position to be at -1
-        self.position = -1
-        self.learner_submission = 0
-        #Check if learner_submission is in kwargs, if so pop both arguments and assign
-        if('position' in kwargs):
-            self.learner_submission = kwargs.pop('learner_submission')
-            self.position = kwargs.pop('position')
-            print( "\n\nReceived args : {} {} \n\n".format(self.learner_submission,self.position))
-
-        # call super.__init__() make sure the position/learner submission kwargs are not there anymore
         super(LearnerSubmissionItemForm, self).__init__(*args, **kwargs)
-        #if we did receive the correct kwargs position is a positive integer
-        if self.position >= 0:
-            #Set the field values to the given parameters
-            self.fields['position'].initial = int(self.position)
-            self.fields['learner_submission'].initial = LearnerPerspectiveSubmission.objects.get(id = self.learner_submission)
-
         #Define form helper
         self.helper = FormHelper()
         self.helper.form_method = 'post'
@@ -135,6 +119,8 @@ class LearnerForm(forms.ModelForm):
     sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings')
     #activity maps the submission to the undertaken activity
     activity = forms.ModelChoiceField(queryset=Activity.objects.all(),widget = forms.HiddenInput)
+    created_by = forms.ModelChoiceField(queryset = User.objects.all(),
+                                        initial = User.objects.get(username = 'marcolindley'), widget = forms.HiddenInput)
 
     def __init__(self,*args, **kwargs):
 
@@ -164,6 +150,6 @@ class LearnerForm(forms.ModelForm):
         )
     class Meta:
         model = LearnerPerspectiveSubmission
-        fields = ('selected_perspective','sharing','activity')
+        fields = ('selected_perspective','sharing','activity','created_by')
 
 

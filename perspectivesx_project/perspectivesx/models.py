@@ -98,6 +98,10 @@ class LearnerPerspectiveSubmission(models.Model):
 
     sharing = models.CharField(max_length=100, choices=SHARE_OPTIONS, default=SHARE)
     created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.OneToOneField(User)
+
+    def __unicode__(self):
+        return "{} Submission from {}".format(self.activity.title, self.created_by.username)
 
 class LearnerSubmissionItem(models.Model):
     '''
@@ -112,10 +116,7 @@ class LearnerSubmissionItem(models.Model):
 
     learner_submission = models.ForeignKey(LearnerPerspectiveSubmission)
 
-    created_by = models.OneToOneField(User)
     created_at = models.DateTimeField(auto_now_add=True)
-
-
 
     def __unicode__(self):
         return "item number {}".format(self.position)
