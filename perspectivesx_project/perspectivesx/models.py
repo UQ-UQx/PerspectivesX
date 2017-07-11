@@ -22,7 +22,8 @@ class TemplateItem(models.Model):
     Template Items are the possible perspectives associated with a template
     '''
     name = models.CharField(max_length=5000, blank=False, verbose_name="Item Name")
-    description = models.TextField(blank=False)
+    # description = models.TextField(blank=False) not too sure if this is needed
+    color = models.CharField(max_length = 7,blank= False, default = "#ff0000")
     position = models.PositiveSmallIntegerField(blank=True, null=True)
 
     template = models.ForeignKey(Template)

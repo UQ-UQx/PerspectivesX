@@ -4,11 +4,11 @@
 
 <div class = "alert alert-info">
     <div class="formset">
-        <strong>Perspective Contribution: </strong>
+        <strong>{{ header }}</strong>
         <br>
         <br>
         <button type="button" class="btn btn-info">
-              <span class="glyphicon glyphicon-plus"></span> Add New Item
+              <span class="glyphicon glyphicon-plus"></span> Add New {{ item }}
         </button>
         <br/>
         <br/>
@@ -18,4 +18,5 @@
             {{ formset|crispy }}
         {% endif %}
     </div>
+
 </div>

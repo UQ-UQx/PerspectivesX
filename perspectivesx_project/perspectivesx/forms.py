@@ -119,29 +119,36 @@ class LearnerForm(forms.ModelForm):
     sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings')
     #activity maps the submission to the undertaken activity
     activity = forms.ModelChoiceField(queryset=Activity.objects.all(),widget = forms.HiddenInput)
-    created_by = forms.ModelChoiceField(queryset = User.objects.all(),
-                                        initial = User.objects.get(username = 'marcolindley'), widget = forms.HiddenInput)
+    #maps the submission to a particular user; TO BE UPDATED WITH LTI INFO
+    created_by = forms.ModelChoiceField(queryset = User.objects.all(), widget = forms.HiddenInput)
 
     def __init__(self,*args, **kwargs):
 
         #retrive args from kwargs array
         self.template_name = kwargs.pop('template_name')
         self.activity = kwargs.pop('activity')
+        self.user = kwargs.pop('user')
         # call super.__init__()
         super(LearnerForm, self).__init__(*args, **kwargs)
 
+        #set the hidden field values with given parameters
         self.fields['selected_perspective']  = forms.ModelChoiceField(queryset=TemplateItem.objects.filter(
             template = Template.objects.filter(name= self.template_name)),
             label="Choose a perspective:", widget = forms.RadioSelect, empty_label= None)
         self.fields['activity'].initial = self.activity
+        self.fields['created_by'].initial = User.objects.get(username = self.user)
+
+        #define form helper
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = "form-horizontal"
         self.helper.field_class = 'col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
+
+        #define form layout
         self.helper.layout = Layout(
             Fieldset('Submission',
-               InlineRadios('selected_perspective'),FormSetLayout('formset'),InlineRadios('sharing'),
+               InlineRadios('selected_perspective'),FormSetLayout('formset',header = "Perspective Contribution:"),InlineRadios('sharing'),
                      'activity'
             ),
             FormActions(
@@ -153,3 +160,32 @@ class LearnerForm(forms.ModelForm):
         fields = ('selected_perspective','sharing','activity','created_by')
 
 
+class TemplateItemForm(forms.ModelForm):
+    pass
+
+class TemplateCreatorForm(forms.ModelForm):
+    #define main fields: template name & description
+    name = forms.CharField(max_length = 5000, label= "Template Title:")
+    description = forms.CharField(label = "Descritpion: ", widget = forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        # call super.__init__()
+        super(TemplateCreatorForm, self).__init__(*args, **kwargs)
+        # define form helper
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = "form-horizontal"
+        self.helper.field_class = 'col-sm-10'
+        self.helper.label_class = 'control-label col-sm-2'
+
+        # define form layout
+        self.helper.layout = Layout(
+            Fieldset('name','description',
+                    FormSetLayout('formset', header="Multi-Perspective Fieldset", item = "Perspective")),
+            FormActions(
+                Submit("Save", "Save")
+            )
+        )
+    class Meta:
+        model = Template
+        fields = ('name','description')

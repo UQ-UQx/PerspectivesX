@@ -20,11 +20,12 @@ class Formset(LayoutObject):
     template = "formset.html"
 
     def __init__(self, formset_context_name, helper_context_name=None,
-                 template=None, label=None):
+                 template=None, label=None, header = "", item= "item"):
 
         self.formset_context_name = formset_context_name
         self.helper_context_name = helper_context_name
-
+        self.header = header
+        self.item = item
         # crispy_forms/layout.py:302 requires us to have a fields property
         self.fields = []
 
@@ -39,5 +40,5 @@ class Formset(LayoutObject):
         if helper:
             helper.form_tag = False
 
-        context.update({'formset': formset, 'helper': helper})
+        context.update({'formset': formset, 'helper': helper, 'header': self.header, 'item':self.item})
         return render_to_string(self.template, context.flatten())

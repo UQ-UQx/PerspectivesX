@@ -3,8 +3,12 @@ from django.http import HttpResponse
 from forms import ActivityForm,LearnerForm,LearnerSubmissionItemForm
 from functools import partial, wraps
 from django.forms import modelformset_factory
-from models import Activity,Template,TemplateItem, LearnerSubmissionItem
+from models import Activity,Template,TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission,User
 # import pdb; pdb.set_trace()
+
+"""
+IN THIS DOCUMENT REPLACE "marcolindley" with LTI user information.
+"""
 
 def index(request):
     """
@@ -46,11 +50,17 @@ def student_submission(request,activity_name_slug):
     activity = Activity.objects.get(slug=activity_name_slug)
     template = Template.objects.get(name=activity.template)
     context_dict = {'activity_name':activity.title }
+    #Check wether submission already exists if so set extra =0 otherwise extra = activity.minimum_contribution
+    if LearnerPerspectiveSubmission.objects.filter(activity = activity).filter(created_by= User.objects.get(username ='marcolindley'))  .exists():
+        extra = 0
+    else:
+        extra = activity.minimum_contribution
+
 
 
     if request.method == "POST":
         #When form is submited generate the form from the activity and template name
-        form = LearnerForm(request.POST, template_name = template.name, activity = activity)
+        form = LearnerForm(request.POST, template_name = template.name, activity = activity, user = 'marcolindley' )
         context_dict['form'] = form
         #if form is valid
         if form.is_valid():
@@ -58,7 +68,7 @@ def student_submission(request,activity_name_slug):
             submission = form.save(commit= True)
 
             #create formset with relevant information taken from submission meta
-            input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = activity.minimum_contribution)
+            input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
 
             formset = input_form_set(request.POST)
             context_dict['formset'] = formset
@@ -81,8 +91,8 @@ def student_submission(request,activity_name_slug):
         else:
             print form.errors
     else:
-        context_dict['form'] = LearnerForm(template_name= template.name,activity = activity)
-        input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = activity.minimum_contribution)
+        context_dict['form'] = LearnerForm(template_name= template.name,activity = activity, user = 'marcolindley')
+        input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
         formset = input_form_set()
         context_dict['formset'] = formset
 
