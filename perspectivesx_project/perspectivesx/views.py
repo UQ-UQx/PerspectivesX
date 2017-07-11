@@ -107,7 +107,7 @@ def create_template(request):
             #retrive Template meta information
             template = form.save(commit = True)
             #create formset
-            input_form_set = formset_factory(TemplateItem, form = TemplateItemForm, extra = 2)
+            input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra = 2)
             formset = input_form_set(request.POST)
             context_dict['formset'] = formset
             # if formset is valud
@@ -117,7 +117,7 @@ def create_template(request):
                 i = 0
                 for item in items:
                     item.position = i
-                    item.Template = template
+                    item.template= template
                     item.save()
                 return index(request)
             else:
@@ -128,7 +128,7 @@ def create_template(request):
             print form.errors
     else:
         form = TemplateCreatorForm()
-        input_form_set = formset_factory(TemplateItemForm, extra=2)
+        input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra=2)
         formset = input_form_set()
         context_dict['formset'] = formset
         context_dict['form']= form

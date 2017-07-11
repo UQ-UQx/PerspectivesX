@@ -163,9 +163,9 @@ class LearnerForm(forms.ModelForm):
 class TemplateItemForm(forms.ModelForm):
     name = forms.CharField(max_length= 500, label = '')
     color = forms.CharField(max_length= 7, label = "Color: ", required = False,
-                            widget= forms.TextInput(attrs = {'type': 'color', 'style': 'width: 10%'}))
-    position = forms.IntegerField(widget = forms.HiddenInput)
-    template = forms.ModelChoiceField(queryset= Template.objects.all(),widget= forms.HiddenInput)
+                            widget= forms.TextInput(attrs = {'type': 'color', 'style': 'width: 10%  '}))
+    position = forms.IntegerField(widget = forms.HiddenInput, required = False)
+    template = forms.ModelChoiceField(queryset= [],widget= forms.HiddenInput, required = False)
 
     def __init__(self,*args,**kwargs):
         super(TemplateItemForm, self).__init__(*args, **kwargs)
