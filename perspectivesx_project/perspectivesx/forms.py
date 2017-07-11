@@ -161,11 +161,28 @@ class LearnerForm(forms.ModelForm):
 
 
 class TemplateItemForm(forms.ModelForm):
-    pass
+    name = forms.CharField(max_length= 500, label = '')
+    color = forms.CharField(max_length= 7, label = "Color: ", required = False,
+                            widget= forms.TextInput(attrs = {'type': 'color', 'style': 'width: 10%'}))
+    position = forms.IntegerField(widget = forms.HiddenInput)
+    template = forms.ModelChoiceField(queryset= Template.objects.all(),widget= forms.HiddenInput)
+
+    def __init__(self,*args,**kwargs):
+        super(TemplateItemForm, self).__init__(*args, **kwargs)
+        #Define form helper
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+
+        self.helper.layout = Layout(
+            Fieldset('','name','color','position','template'))
+    class Meta:
+        model = TemplateItem
+        fields = ('name','color','position', 'template')
+
 
 class TemplateCreatorForm(forms.ModelForm):
     #define main fields: template name & description
-    name = forms.CharField(max_length = 5000, label= "Template Title:")
+    name = forms.CharField( label= "Template Title:")
     description = forms.CharField(label = "Descritpion: ", widget = forms.Textarea)
 
     def __init__(self, *args, **kwargs):
@@ -180,7 +197,7 @@ class TemplateCreatorForm(forms.ModelForm):
 
         # define form layout
         self.helper.layout = Layout(
-            Fieldset('name','description',
+            Fieldset('','name','description',
                     FormSetLayout('formset', header="Multi-Perspective Fieldset", item = "Perspective")),
             FormActions(
                 Submit("Save", "Save")

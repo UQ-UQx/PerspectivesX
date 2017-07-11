@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from forms import ActivityForm,LearnerForm,LearnerSubmissionItemForm
+from forms import ActivityForm,LearnerForm,LearnerSubmissionItemForm,TemplateCreatorForm,TemplateItemForm
 from functools import partial, wraps
-from django.forms import modelformset_factory
+from django.forms import modelformset_factory, formset_factory
 from models import Activity,Template,TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission,User
 # import pdb; pdb.set_trace()
 
@@ -95,9 +95,41 @@ def student_submission(request,activity_name_slug):
         input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
         formset = input_form_set()
         context_dict['formset'] = formset
-
     return render(request, 'learner_submission.html', context_dict)
 
 
 def create_template(request):
-    pass
+    context_dict = {}
+    if request.method == 'POST':
+        form = TemplateCreatorForm(request.POST)
+        context_dict['form'] = form
+        if form.is_valid():
+            #retrive Template meta information
+            template = form.save(commit = True)
+            #create formset
+            input_form_set = formset_factory(TemplateItem, form = TemplateItemForm, extra = 2)
+            formset = input_form_set(request.POST)
+            context_dict['formset'] = formset
+            # if formset is valud
+            if formset.is_valid():
+                # populate items from form set with correct position and submission info
+                items = formset.save(commit=False)
+                i = 0
+                for item in items:
+                    item.position = i
+                    item.Template = template
+                    item.save()
+                return index(request)
+            else:
+                #Something went wrong when validating the formset remove the template
+                template.delete()
+                print formset.errors
+        else:
+            print form.errors
+    else:
+        form = TemplateCreatorForm()
+        input_form_set = formset_factory(TemplateItemForm, extra=2)
+        formset = input_form_set()
+        context_dict['formset'] = formset
+        context_dict['form']= form
+    return render(request, 'create_template.html', context_dict)
