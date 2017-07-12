@@ -8,5 +8,6 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^perspectivesX/',include('perspectivesx.urls')),
+    url(r'^api/', include('perspectivesx.apiurls'))
 
 ]

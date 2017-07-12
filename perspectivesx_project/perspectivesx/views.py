@@ -4,6 +4,8 @@ from forms import ActivityForm,LearnerForm,LearnerSubmissionItemForm,TemplateCre
 from functools import partial, wraps
 from django.forms import modelformset_factory, formset_factory
 from models import Activity,Template,TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission,User
+from rest_framework import viewsets
+from .serializers import *
 # import pdb; pdb.set_trace()
 
 """
@@ -70,7 +72,7 @@ def student_submission(request,activity_name_slug):
             #create formset with relevant information taken from submission meta
             input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
 
-            formset = input_form_set(request.POST)
+            formset = input_form_set(request.POST,queryset= LearnerSubmissionItem.objects.none())
             context_dict['formset'] = formset
             # print(formset)
             #if formset is valud
@@ -93,7 +95,7 @@ def student_submission(request,activity_name_slug):
     else:
         context_dict['form'] = LearnerForm(template_name= template.name,activity = activity, user = 'marcolindley')
         input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
-        formset = input_form_set()
+        formset = input_form_set(queryset= LearnerSubmissionItem.objects.none())
         context_dict['formset'] = formset
     return render(request, 'learner_submission.html', context_dict)
 
@@ -108,7 +110,7 @@ def create_template(request):
             template = form.save(commit = True)
             #create formset
             input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra = 2)
-            formset = input_form_set(request.POST)
+            formset = input_form_set(request.POST, queryset= TemplateItem.objects.none())
             context_dict['formset'] = formset
             # if formset is valud
             if formset.is_valid():
@@ -129,7 +131,27 @@ def create_template(request):
     else:
         form = TemplateCreatorForm()
         input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra=2)
-        formset = input_form_set()
+        formset = input_form_set(queryset= TemplateItem.objects.none())
         context_dict['formset'] = formset
         context_dict['form']= form
     return render(request, 'create_template.html', context_dict)
+
+class TemplateViewSet(viewsets.ModelViewSet):
+    queryset = Template.objects.all()
+    serializer_class = TemplateSerializer
+
+class TemplateItemViewSet(viewsets.ModelViewSet):
+    queryset = TemplateItem.objects.all()
+    serializer_class = TemplateItemSerializer
+
+class ActivityViewSet(viewsets.ModelViewSet):
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+
+class LearnerSubmissionViewSet(viewsets.ModelViewSet):
+    queryset = LearnerPerspectiveSubmission.objects.all()
+    serializer_class = LearnerPespectiveSubmissionSerializer
+
+class LearnerSubmissionItemViewSet(viewsets.ModelViewSet):
+    queryset = LearnerSubmissionItem.objects.all()
+    serializer_class = LearnerSubmissionItemSerializer

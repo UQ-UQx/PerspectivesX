@@ -3,7 +3,7 @@ from models import Template, TemplateItem, Activity, LearnerSubmissionItem, Lear
 
 # Register your models here.
 class TemplateAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name','description')
     search_fields = ('name',)
 
 class TemplateItemAdmin(admin.ModelAdmin):

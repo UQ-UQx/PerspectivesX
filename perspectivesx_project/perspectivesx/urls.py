@@ -1,8 +1,8 @@
 from django.conf.urls import url
-from perspectivesx import views
+from .views import add_activity,index,student_submission,create_template
 
 urlpatterns = [
-   url(r'^add_activity/$', views.add_activity, name='add_activity'),
-   url(r'^$',views.index, name = 'index'),
-   url(r'^submission/(?P<activity_name_slug>[\w\-]+)/$',views.student_submission,name = 'submission'),
-   url(r'^create_template/$',views.create_template, name = 'create_template'),]
+   url(r'^add_activity/$', add_activity, name='add_activity'),
+   url(r'^$',index, name = 'index'),
+   url(r'^submission/(?P<activity_name_slug>[\w\-]+)/$',student_submission,name = 'submission'),
+   url(r'^create_template/$',create_template, name = 'create_template'),]

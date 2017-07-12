@@ -11,10 +11,13 @@ class Template(models.Model):
     name = models.CharField(max_length=5000, blank=False, verbose_name="Template Name")
     description = models.TextField(blank=False)
 
-
-
     def __unicode__(self):
         return self.name
+
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name_plural = "Templates"
 
 class TemplateItem(models.Model):
     '''
@@ -30,6 +33,11 @@ class TemplateItem(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+    class Meta:
+        ordering = ["template","position"]
+        verbose_name_plural = "Template Items"
 
 class Activity(models.Model):
     '''
@@ -78,6 +86,10 @@ class Activity(models.Model):
     def __unicode__(self):
         return self.title
 
+    class Meta:
+        ordering = ["template", "title"]
+        verbose_name_plural = "Activities"
+
 class LearnerPerspectiveSubmission(models.Model):
     '''
     Model to store how a learner submission is assigned to a particular perspective.
@@ -104,6 +116,10 @@ class LearnerPerspectiveSubmission(models.Model):
     def __unicode__(self):
         return "{} Submission from {}".format(self.activity.title, self.created_by.username)
 
+    class Meta:
+        ordering = ["activity","created_by"]
+        verbose_name_plural = "Learner Submissions"
+
 class LearnerSubmissionItem(models.Model):
     '''
     Model for a Learner Submission Item for a PerpectivesX Activity.
@@ -122,4 +138,6 @@ class LearnerSubmissionItem(models.Model):
     def __unicode__(self):
         return "item number {}".format(self.position)
 
-
+    class Meta:
+        ordering = ["learner_submission","position"]
+        verbose_name_plural = "Learner Submission Items"
