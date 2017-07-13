@@ -20,7 +20,7 @@ class LearnerSubmissionAdmin(admin.ModelAdmin):
     search_fields = ('item', 'position', 'learner_submission')
 
 class LearnerPerspectiveAdmin(admin.ModelAdmin):
-    list_display = ('selected_perspective', 'activity',)
+    list_display = ('selected_perspective','__unicode__' ,)
     search_fields = ('selected_perspective', 'activity',)
 
 admin.site.register(Template, TemplateAdmin)

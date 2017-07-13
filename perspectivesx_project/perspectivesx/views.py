@@ -40,7 +40,7 @@ def add_activity(request):
 
     return render(request, 'add_activity.html', {'form': form})
 
-def student_submission(request,activity_name_slug):
+def student_submission(request,activity_name_slug, extra = 0):
     """
     View for student submission page
     Displays the submission form in function of the undertaken activity
@@ -53,7 +53,7 @@ def student_submission(request,activity_name_slug):
     template = Template.objects.get(name=activity.template)
     context_dict = {'activity_name':activity.title }
     #Check wether submission already exists if so set extra =0 otherwise extra = activity.minimum_contribution
-    if LearnerPerspectiveSubmission.objects.filter(activity = activity).filter(created_by= User.objects.get(username ='marcolindley'))  .exists():
+    if LearnerPerspectiveSubmission.objects.filter(activity = activity).filter(created_by= User.objects.get(username ='marcolindley')).exists():
         extra = 0
     else:
         extra = activity.minimum_contribution
@@ -61,79 +61,105 @@ def student_submission(request,activity_name_slug):
 
 
     if request.method == "POST":
-        #When form is submited generate the form from the activity and template name
-        form = LearnerForm(request.POST, template_name = template.name, activity = activity, user = 'marcolindley' )
-        context_dict['form'] = form
-        #if form is valid
-        if form.is_valid():
-            #retrive submission meta
-            submission = form.save(commit= True)
-
-            #create formset with relevant information taken from submission meta
-            input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
-
-            formset = input_form_set(request.POST,queryset= LearnerSubmissionItem.objects.none())
+        if(request.POST.keys().__contains__('action') and request.POST['action'].__contains__("Add new")):
+            extra = int(request.POST['extra']) + 1
+            context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user='marcolindley')
+            input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
+            formset = input_form_set()
             context_dict['formset'] = formset
-            # print(formset)
-            #if formset is valud
-            if formset.is_valid():
-                #populate items from form set with correct position and submission info
-                items = formset.save(commit = False)
-                i = 0
-                for item in items:
-                    item.position = i
-                    item.learner_submission = submission
-                    item.save()
-                return index(request)
+        else:   #When form is submited generate the form from the activity and template name
+            form = LearnerForm(request.POST, template_name = template.name, activity = activity, user = 'marcolindley' )
+            context_dict['form'] = form
+            #if form is valid
+            if form.is_valid():
+                #retrive submission meta
+                submission = form.save(commit= True)
 
+                #create formset with relevant information taken from submission meta
+                input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
+
+                formset = input_form_set(request.POST)
+                context_dict['formset'] = formset
+                # print(formset)
+                #if formset is valud
+                if formset.is_valid():
+                    #populate items from form set with correct position and submission info
+                    items = formset.save(commit = False)
+                    i = 0
+                    for item in items:
+                        item.position = i
+                        i += 1
+                        item.learner_submission = submission
+                        item.save()
+                    return index(request)
+
+                else:
+                    #Something went wrong when validating the formset remove the submission
+                    submission.delete()
+                    print formset.errors
+                    input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm,
+                                                          extra=extra)
+                    formset = input_form_set()
+                    context_dict['formset'] = formset
             else:
-                #Something went wrong when validating the formset remove the submission
-                submission.delete()
-                print formset.errors
-        else:
-            print form.errors
+                #add lines for updating existing entry
+                print form.errors
+
     else:
         context_dict['form'] = LearnerForm(template_name= template.name,activity = activity, user = 'marcolindley')
         input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
-        formset = input_form_set(queryset= LearnerSubmissionItem.objects.none())
+        formset = input_form_set()
         context_dict['formset'] = formset
+    context_dict['extra'] = extra
     return render(request, 'learner_submission.html', context_dict)
 
 
 def create_template(request):
     context_dict = {}
+    extra  = 2
     if request.method == 'POST':
-        form = TemplateCreatorForm(request.POST)
-        context_dict['form'] = form
-        if form.is_valid():
-            #retrive Template meta information
-            template = form.save(commit = True)
-            #create formset
-            input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra = 2)
-            formset = input_form_set(request.POST, queryset= TemplateItem.objects.none())
+        if (request.POST.keys().__contains__('action') and request.POST['action'].__contains__("Add new")):
+            extra = int(request.POST['extra']) + 1
+            form = TemplateCreatorForm()
+            input_form_set = modelformset_factory(TemplateItem, form=TemplateItemForm, extra=extra)
+            formset = input_form_set(queryset=TemplateItem.objects.none())
             context_dict['formset'] = formset
-            # if formset is valud
-            if formset.is_valid():
-                # populate items from form set with correct position and submission info
-                items = formset.save(commit=False)
-                i = 0
-                for item in items:
-                    item.position = i
-                    item.template= template
-                    item.save()
-                return index(request)
-            else:
-                #Something went wrong when validating the formset remove the template
-                template.delete()
-                print formset.errors
+            context_dict['form'] = form
         else:
-            print form.errors
+            form = TemplateCreatorForm(request.POST)
+            context_dict['form'] = form
+            if form.is_valid():
+                #retrive Template meta information
+                template = form.save(commit = True)
+                #create formset
+                input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra = extra)
+                formset = input_form_set(request.POST, queryset= TemplateItem.objects.none())
+                context_dict['formset'] = formset
+                # if formset is valud
+                if formset.is_valid():
+                    # populate items from form set with correct position and submission info
+                    items = formset.save(commit=False)
+                    i=0
+                    for item in items:
+                        item.position = i
+                        item.template= template
+                        item.save()
+                        i+=1
+                    return index(request)
+                else:
+                    #Something went wrong when validating the formset remove the template
+                    template.delete()
+                    print formset.errors
+            else:
+                print form.errors
     else:
         form = TemplateCreatorForm()
-        input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra=2)
+        input_form_set = modelformset_factory(TemplateItem,form=TemplateItemForm, extra=extra)
         formset = input_form_set(queryset= TemplateItem.objects.none())
         context_dict['formset'] = formset
         context_dict['form']= form
+
+    context_dict["extra"] = extra
     return render(request, 'create_template.html', context_dict)
 
 class TemplateViewSet(viewsets.ModelViewSet):

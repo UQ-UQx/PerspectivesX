@@ -141,3 +141,8 @@ class LearnerSubmissionItem(models.Model):
     class Meta:
         ordering = ["learner_submission","position"]
         verbose_name_plural = "Learner Submission Items"
+
+class SubmissionScore(models.Model):
+    submission = models.ForeignKey(LearnerPerspectiveSubmission)
+    score = models.IntegerField()
+

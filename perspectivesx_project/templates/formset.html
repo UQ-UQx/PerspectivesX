@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 {% load crispy_forms_tags %}
 {% load staticfiles %}
-
+<script type = "text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+<script type = "text/javascript" src="{% static "js/bootstrap.min.js" %}"></script>
+<script type = "text/javascript" src="{%  static "js/scripts.js"%}"></script>
 <div class = "alert alert-info">
     <div class="formset">
         <strong>{{ header }}</strong>
         <br>
         <br>
-        <button type="button" class="btn btn-info">
-              <span class="glyphicon glyphicon-plus"></span> Add New {{ item }}
-        </button>
+        <input type="submit" , name = "action" value="Add new {{ item }}" class="btn btn-info">
+              <span class="glyphicon glyphicon-plus"></span>
+        </input>
+        <input type="hidden" name="extra" value="{{extra}}">
         <br/>
         <br/>
         {% if helper %}
-            {% crispy formset helper %}
+            {% crispy formset %}
         {% else %}
             {{ formset|crispy }}
         {% endif %}
     </div>
-
 </div>
