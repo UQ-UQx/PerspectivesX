@@ -111,7 +111,7 @@ class LearnerPerspectiveSubmission(models.Model):
 
     sharing = models.CharField(max_length=100, choices=SHARE_OPTIONS, default=SHARE)
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.OneToOneField(User)
+    created_by = models.ForeignKey(User)
 
     def __unicode__(self):
         return "{} Submission from {}".format(self.activity.title, self.created_by.username)
@@ -119,6 +119,7 @@ class LearnerPerspectiveSubmission(models.Model):
     class Meta:
         ordering = ["activity","created_by"]
         verbose_name_plural = "Learner Submissions"
+        unique_together = ('activity','created_by' )
 
 class LearnerSubmissionItem(models.Model):
     '''

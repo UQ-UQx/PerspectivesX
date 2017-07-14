@@ -25,8 +25,12 @@
         <div class="well well-sm">
 
 </div>
-            This is just a dummy index webpage
-            Here is a link to <a href = "{% url 'add_activity' %}">Add activity </a> form
+            This is just a dummy index webpage</br></br>
+            Here is a link to <a href = "{% url 'add_activity' %}">Add activity </a> form</br></br>
+            {{ activitities }}
+            {%for  activity in activities%}
+                Here is a link to <a href = "{% url 'submission' activity.slug%}"}> {{ activity }} Submission </a> form </br></br>
+            {% endfor  %}
 		</div>
 	</div>
 </div>

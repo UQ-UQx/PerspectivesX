@@ -19,7 +19,7 @@ def index(request):
     :param request:
     :return:
     """
-    return render(request, 'index.html')
+    return render(request, 'index.html', {'activities':Activity.objects.all()})
 
 def add_activity(request):
     """
@@ -52,23 +52,30 @@ def student_submission(request,activity_name_slug, extra = 0):
     activity = Activity.objects.get(slug=activity_name_slug)
     template = Template.objects.get(name=activity.template)
     context_dict = {'activity_name':activity.title }
+    instance = LearnerPerspectiveSubmission.objects.filter(activity=activity).get\
+        (created_by= User.objects.filter(username= 'marcolindley'))
+    pre_existing_answers = LearnerSubmissionItem.objects.filter(
+        learner_submission=instance)
     #Check wether submission already exists if so set extra =0 otherwise extra = activity.minimum_contribution
-    if LearnerPerspectiveSubmission.objects.filter(activity = activity).filter(created_by= User.objects.get(username ='marcolindley')).exists():
+
+    if pre_existing_answers.exists():
         extra = 0
     else:
         extra = activity.minimum_contribution
 
 
-
     if request.method == "POST":
         if(request.POST.keys().__contains__('action') and request.POST['action'].__contains__("Add new")):
             extra = int(request.POST['extra']) + 1
-            context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user='marcolindley')
+            context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user='marcolindley', instance = instance)
             input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
-            formset = input_form_set()
+            #stop the formset from prepopulating with all LearnerSubmissionItems, update with user info once LTI is plugged in
+
+            formset = input_form_set(queryset= pre_existing_answers)
             context_dict['formset'] = formset
         else:   #When form is submited generate the form from the activity and template name
-            form = LearnerForm(request.POST, template_name = template.name, activity = activity, user = 'marcolindley' )
+            form = LearnerForm(request.POST, template_name = template.name, activity = activity, user = 'marcolindley',
+                               instance = instance )
             context_dict['form'] = form
             #if form is valid
             if form.is_valid():
@@ -78,7 +85,7 @@ def student_submission(request,activity_name_slug, extra = 0):
                 #create formset with relevant information taken from submission meta
                 input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
 
-                formset = input_form_set(request.POST)
+                formset = input_form_set(request.POST,queryset= pre_existing_answers)
                 context_dict['formset'] = formset
                 # print(formset)
                 #if formset is valud
@@ -86,6 +93,10 @@ def student_submission(request,activity_name_slug, extra = 0):
                     #populate items from form set with correct position and submission info
                     items = formset.save(commit = False)
                     i = 0
+                    #adjust position value depending on pre_existing_answers
+                    if(pre_existing_answers.exists()):
+                        i = pre_existing_answers.count()
+
                     for item in items:
                         item.position = i
                         i += 1
@@ -99,16 +110,22 @@ def student_submission(request,activity_name_slug, extra = 0):
                     print formset.errors
                     input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm,
                                                           extra=extra)
-                    formset = input_form_set()
+                    formset = input_form_set( queryset= pre_existing_answers )
                     context_dict['formset'] = formset
             else:
                 #add lines for updating existing entry
+                input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm,
+                                                      extra=extra)
+
+                formset = input_form_set(request.POST, queryset=pre_existing_answers)
+                context_dict['formset'] = formset
                 print form.errors
 
     else:
-        context_dict['form'] = LearnerForm(template_name= template.name,activity = activity, user = 'marcolindley')
+        context_dict['form'] = LearnerForm(template_name= template.name,activity = activity, user = 'marcolindley',
+                                           instance= instance )
         input_form_set = modelformset_factory(LearnerSubmissionItem,form = LearnerSubmissionItemForm,extra = extra)
-        formset = input_form_set()
+        formset = input_form_set( queryset= pre_existing_answers)
         context_dict['formset'] = formset
     context_dict['extra'] = extra
     return render(request, 'learner_submission.html', context_dict)
