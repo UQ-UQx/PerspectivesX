@@ -147,11 +147,20 @@ def create_template(request):
         if (request.POST.keys().__contains__('action') and request.POST['action'].__contains__("Add new")):
             #increment extra
             extra = int(request.POST['extra']) + 1
-            form = TemplateCreatorForm()
-            input_form_set = modelformset_factory(TemplateItem, form=TemplateItemForm, extra=extra, )
-            formset = input_form_set(queryset = TemplateItem.objects.none())
-            context_dict['formset'] = formset
-            context_dict['form'] = form
+            form = TemplateCreatorForm(request.POST)
+            input_form_set = modelformset_factory(TemplateItem, form=TemplateItemForm, extra=extra)
+
+            formset = input_form_set(request.POST)
+            if formset.is_valid():
+                instances = formset.save(commit = False)
+                initial = []
+                for instance in instances:
+                    initial.append({'name':instance.name})
+                formset = input_form_set(queryset = TemplateItem.objects.none(),initial = initial )
+                context_dict['formset'] = formset
+                context_dict['form'] = form
+            else:
+                print(formset.errors)
         else:
             form = TemplateCreatorForm(request.POST)
             context_dict['form'] = form

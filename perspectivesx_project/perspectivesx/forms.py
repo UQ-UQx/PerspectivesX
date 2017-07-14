@@ -161,7 +161,7 @@ class LearnerForm(forms.ModelForm):
 
 
 class TemplateItemForm(forms.ModelForm):
-    name = forms.CharField(max_length= 500, label = '')
+    name = forms.CharField(max_length= 500, label = '', initial = "Describe Perspective")
     color = forms.CharField(max_length= 7, label = "Color: ", required = False,
                             widget= forms.TextInput(attrs = {'type': 'color', 'style': 'width: 10%  '}))
     position = forms.IntegerField(widget = forms.HiddenInput, required = False)
@@ -194,7 +194,6 @@ class TemplateCreatorForm(forms.ModelForm):
         self.helper.form_class = "form-horizontal"
         self.helper.field_class = 'col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
-
         # define form layout
         self.helper.layout = Layout(
             Fieldset('','name','description',
