@@ -182,8 +182,8 @@ class TemplateItemForm(forms.ModelForm):
 
 class TemplateCreatorForm(forms.ModelForm):
     #define main fields: template name & description
-    name = forms.CharField( label= "Template Title:")
-    description = forms.CharField(label = "Descritpion: ", widget = forms.Textarea)
+    name = forms.CharField( label= "Template Title:", initial = "\"Template Name\"")
+    description = forms.CharField(label = "Descritpion: ", widget = forms.Textarea, initial = "Describe the activity Template")
 
     def __init__(self, *args, **kwargs):
         # call super.__init__()

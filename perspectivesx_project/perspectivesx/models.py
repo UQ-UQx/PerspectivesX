@@ -8,8 +8,8 @@ class Template(models.Model):
     Model for PerspectivesX Template.
     A Template is a associated with an activity and defines the actions required from the learner
     '''
-    name = models.CharField(max_length=5000, blank=False, verbose_name="Template Name")
-    description = models.TextField(blank=False)
+    name = models.CharField(max_length=5000,verbose_name="Template Name")
+    description = models.TextField()
 
     def __unicode__(self):
         return self.name
@@ -24,9 +24,9 @@ class TemplateItem(models.Model):
     Model for PerspectivesX Template Item.
     Template Items are the possible perspectives associated with a template
     '''
-    name = models.CharField(max_length=5000, blank=False, verbose_name="Item Name")
+    name = models.CharField(max_length=5000,verbose_name="Item Name")
     # description = models.TextField(blank=False) not too sure if this is needed
-    color = models.CharField(max_length = 7,blank= False, default = "#ff0000")
+    color = models.CharField(max_length = 7,default = "#ff0000")
     position = models.PositiveSmallIntegerField(blank=True, null=True)
 
     template = models.ForeignKey(Template)
