@@ -67,8 +67,16 @@ class Activity(models.Model):
     )
     perspective_selection = models.CharField(max_length=100, choices=PERSPECTIVE_SELECTION_OPTIONS, default=RANDOM)
 
+    SELECTED = 'Allow learners to choose a perspective to curate'
+    RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
+    ALL = 'Allow Learners to curate all perspectives'
+    PERSPECTIVE_CURATION_OPTIONS = (
+        (SELECTED, SELECTED),
+        (RANDOM, RANDOM),
+        (ALL, ALL)
+    )
 
-    enable_curation = models.BooleanField(blank=False, default=True)
+    enable_curation = models.CharField(max_length=100, choices=PERSPECTIVE_CURATION_OPTIONS, default=RANDOM)
     view_knowledge_base_before_sumbmission = models.BooleanField(blank=False, default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -137,13 +145,29 @@ class LearnerSubmissionItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return "item number {}".format(self.position)
+        return "Item number {} at {}".format(self.position, self.learner_submission)
 
     class Meta:
         ordering = ["learner_submission","position"]
         verbose_name_plural = "Learner Submission Items"
 
+class CuratedItem(models.Model):
+    item = models.ForeignKey(LearnerSubmissionItem)
+    score = models.IntegerField()
+    curator = models.ForeignKey(User)
+
+    def __unicode__(self):
+        return " {}. Curated by {}".format(self.item, self.curator)
+
+
 class SubmissionScore(models.Model):
     submission = models.ForeignKey(LearnerPerspectiveSubmission)
-    score = models.IntegerField()
+    participation_grade = models.IntegerField()
+    curation_grade = models.IntegerField()
+    total_grade = models.IntegerField()
+
+    def __unicode__(self):
+        return "{} \n Grades: \n Contribution: {}\n Curation: {} \n Total: {} \n".format(
+            self.submission, self.participation_grade, self.curation_grade, self.total_grade)
+
 

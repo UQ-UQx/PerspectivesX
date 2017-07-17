@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>PerspectivexX</title>
+    <title>PerspectiveX</title>
 
     <meta name="description" content="Source code generated using layoutit.com">
     <meta name="author" content = "Marco Lindley">
@@ -30,6 +30,7 @@
             {{ activitities }}
             {%for  activity in activities%}
                 Here is a link to <a href = "{% url 'submission' activity.slug%}"}> {{ activity }} Submission </a> form </br></br>
+                Here is a link to <a href = "{% url 'Item Curator' activity.slug %}"> {{ activity }} Curation </a> form </br></br>
             {% endfor  %}
 		</div>
 	</div>

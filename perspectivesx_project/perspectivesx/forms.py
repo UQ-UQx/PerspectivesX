@@ -2,7 +2,7 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row,Hidden
 from crispy_forms.bootstrap import FormActions,InlineRadios,PrependedText, InlineField,StrictButton
-from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission,LearnerSubmissionItem,User
+from models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission,LearnerSubmissionItem,User,CuratedItem
 from formsetlayout import Formset as FormSetLayout
 
 class ActivityForm(forms.ModelForm):
@@ -161,7 +161,7 @@ class LearnerForm(forms.ModelForm):
 
 
 class TemplateItemForm(forms.ModelForm):
-    name = forms.CharField(max_length= 500, label = '', initial = "Describe Perspective")
+    name = forms.CharField(max_length= 500, label = '', initial = "Describe Perspectiveitem")
     color = forms.CharField(max_length= 7, label = "Color: ", required = False,
                             widget= forms.TextInput(attrs = {'type': 'color', 'style': 'width: 10%  '}))
     position = forms.IntegerField(widget = forms.HiddenInput, required = False)
@@ -205,3 +205,59 @@ class TemplateCreatorForm(forms.ModelForm):
     class Meta:
         model = Template
         fields = ('name','description')
+
+class ItemCuratorForm(forms.ModelForm):
+    item = forms.ModelChoiceField(queryset= [], widget = forms.HiddenInput)
+    score = forms.IntegerField()
+    curator = forms.ModelChoiceField(queryset=[], widget = forms.HiddenInput)
+
+    def __init__(self,*args, **kwargs):
+        #retrieve args from kwargs
+        self.item= kwargs.pop("item")
+        self.curator = kwargs.pop("curator")
+        #call super
+        super(ItemCuratorForm,self).__init__(*args,**kwargs)
+        #define fields item and curator and set heir values
+        self.fields['item'] = forms.ModelChoiceField(queryset= LearnerSubmissionItem.objects.filter(id = self.item),
+                                                     initial = self.item)
+        self.fields['curator'] = forms.ModelChoiceField(queryset = User.objects.filter(username = self.curator),
+                                                        initial = User.objects.get(username = self.curator))
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = "form-horizontal"
+        self.helper.field_class = 'col-sm-10'
+        self.helper.label_class = 'control-label col-sm-2'
+        # define form layout
+        self.helper.layout = Layout(
+            Fieldset('Curation', 'score', 'item','curator'),
+            FormActions(
+                Submit("Submit", "Submit")
+            )
+        )
+
+    class Meta:
+        model = CuratedItem
+        fields = ('item', 'score','curator')
+
+class CurationItemChooseForm(forms.Form):
+    item = forms.ModelChoiceField(queryset = [])
+
+    def __init__(self,*args,**kwargs):
+        self.activity = kwargs.pop('activity')
+        # call super
+        super(CurationItemChooseForm, self).__init__(*args, **kwargs)
+        # define fields item and curator and set heir values
+        item = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
+            learner_submission= LearnerPerspectiveSubmission.objects.filter(activity=self.activity)))
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = "form-horizontal"
+        self.helper.field_class = 'col-sm-10'
+        self.helper.label_class = 'control-label col-sm-2'
+        # define form layout
+        self.helper.layout = Layout(
+            Fieldset('Choose Item to Curate', 'item'),
+            FormActions(
+                Submit("Submit", "Submit")
+            )
+        )

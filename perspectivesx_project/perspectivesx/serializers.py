@@ -25,3 +25,13 @@ class LearnerSubmissionItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearnerSubmissionItem
         fields = '__all__'
+
+class CuratedItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CuratedItem
+        fields = '__all__'
+
+class SubmissionScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionScore
+        fields= '__all__'
