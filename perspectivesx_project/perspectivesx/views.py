@@ -226,19 +226,25 @@ def create_template(request):
     return render(request, 'create_template.html', context_dict)
 
 
+
+
 def choose_curate_item(request,activity_name_slug):
     activity = Activity.objects.get(slug=activity_name_slug)
+    print("MADE IT HERE YO")
     if request.method == 'POST':
         form = CurationItemChooseForm(request.POST , activity= activity)
         if form.is_valid():
             item = form.cleaned_data['item']
-            return curate_item(request,activity_name_slug,item)
+            return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug,item.id))
         else:
             print form.errors
     else:
         form = CurationItemChooseForm(activity = activity)
 
     return render(request, 'choose_curation_item.html', {'form': form})
+
+
+
 
 def curate_item(request, activity_name_slug, item  = None):
 
@@ -247,11 +253,11 @@ def curate_item(request, activity_name_slug, item  = None):
     activity = Activity.objects.get(slug=activity_name_slug)
     #Check wether item is set, if not either let the user select one or assign one randomly
     if( item == None):
-        curator_mode = int(activity.enable_curation)
-        SELECTED = 0
-        RANDOM = 1
-        ALL = 2
-        print(curator_mode)
+        curator_mode = activity.enable_curation
+        SELECTED = 'Allow learners to choose a perspective to curate'
+        RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
+        ALL = 'Allow Learners to curate all perspectives'
+
         if curator_mode == SELECTED or curator_mode == ALL:
             return choose_curate_item(request,activity_name_slug)
 
@@ -259,11 +265,14 @@ def curate_item(request, activity_name_slug, item  = None):
             item_list = list(LearnerSubmissionItem.objects.filter(
                 learner_submission= LearnerPerspectiveSubmission.objects.filter(activity= activity)
             ))
-            item = item_list[randint(0,len(item_list)-1)]
-            print(item)
+            #the id is needed rather the the actual item object
+            item = item_list[randint(0,len(item_list)-1)].id
+    else:
+        #parse the item id string into an integer
+        item = int(item)
 
     if request.method == 'POST':
-        form = ItemCuratorForm(request.POST, curator=User.objects.get(username = "marcolindley"), item = item.id)
+        form = ItemCuratorForm(request.POST, curator=User.objects.get(username = "marcolindley"), item = item)
         context_dict['form'] = form
         if form.is_valid():
             form.save(commit=True)
@@ -272,10 +281,10 @@ def curate_item(request, activity_name_slug, item  = None):
             print form.errors
     else:
         #replace marcolindley with LTI user info
-        form = ItemCuratorForm(curator=User.objects.get(username = "marcolindley"), item = item.id)
+        form = ItemCuratorForm(curator=User.objects.get(username = "marcolindley"), item = item)
         context_dict['form']= form
 
-    context_dict['item'] = item
+    context_dict['item'] = LearnerSubmissionItem.objects.get(id = item).item
     return render(request, 'item_curator.html', context_dict)
 
 

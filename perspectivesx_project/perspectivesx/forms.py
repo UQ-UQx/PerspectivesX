@@ -208,7 +208,7 @@ class TemplateCreatorForm(forms.ModelForm):
 
 class ItemCuratorForm(forms.ModelForm):
     item = forms.ModelChoiceField(queryset= [], widget = forms.HiddenInput)
-    score = forms.IntegerField()
+    score = forms.IntegerField(max_value=100, initial = 50)
     curator = forms.ModelChoiceField(queryset=[], widget = forms.HiddenInput)
 
     def __init__(self,*args, **kwargs):
@@ -219,9 +219,9 @@ class ItemCuratorForm(forms.ModelForm):
         super(ItemCuratorForm,self).__init__(*args,**kwargs)
         #define fields item and curator and set heir values
         self.fields['item'] = forms.ModelChoiceField(queryset= LearnerSubmissionItem.objects.filter(id = self.item),
-                                                     initial = self.item)
+                                                     initial = self.item, widget = forms.HiddenInput)
         self.fields['curator'] = forms.ModelChoiceField(queryset = User.objects.filter(username = self.curator),
-                                                        initial = User.objects.get(username = self.curator))
+                                                        initial = User.objects.get(username = self.curator) , widget= forms.HiddenInput)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = "form-horizontal"
@@ -247,7 +247,7 @@ class CurationItemChooseForm(forms.Form):
         # call super
         super(CurationItemChooseForm, self).__init__(*args, **kwargs)
         # define fields item and curator and set heir values
-        item = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
+        self.fields['item'] = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
             learner_submission= LearnerPerspectiveSubmission.objects.filter(activity=self.activity)))
         self.helper = FormHelper()
         self.helper.form_method = 'post'

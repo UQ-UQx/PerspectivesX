@@ -7,4 +7,4 @@ urlpatterns = [
    url(r'^submission/(?P<activity_name_slug>[\w\-]+)/$',student_submission,name = 'submission'),
    url(r'^create_template/$',create_template, name = 'create_template'),
    url(r'^curate/(?P<activity_name_slug>[\w\-]+)/$',curate_item, name = "Item Curator"),
-   url(r'^curate/(?P<activity_name_slug>[\w\-]+)/(?P<item>[\w\-]+)/$',curate_item, name = "Defined Item Curator")]
+   url(r'^curate/(?P<activity_name_slug>[\w\-]+)/(?P<item>\d+)/$',curate_item, name = "Defined Item Curator")]
