@@ -244,11 +244,32 @@ class CurationItemChooseForm(forms.Form):
 
     def __init__(self,*args,**kwargs):
         self.activity = kwargs.pop('activity')
+        self.all = kwargs.pop('all')
+        self.curator = kwargs.pop('curator')
         # call super
         super(CurationItemChooseForm, self).__init__(*args, **kwargs)
         # define fields item and curator and set heir values
-        self.fields['item'] = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
-            learner_submission= LearnerPerspectiveSubmission.objects.filter(activity=self.activity)))
+        if(self.all):
+            #retrive all LearnerSubmissionItems from activity
+            # !!!!!!!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI is set up !!!!!!!!!!!
+            learner_submission_items = LearnerSubmissionItem.objects.filter(learner_submission__activity= self.activity)
+            #retirve items already curated
+            items_already_curated = CuratedItem.objects.filter(curator = self.curator).filter(item__in = learner_submission_items )
+            #retrieve actual items from curated items
+            items = LearnerSubmissionItem.objects.filter(id__in = items_already_curated.values('item_id'))
+            #retrieve learner submission from actual items
+            submissions = LearnerPerspectiveSubmission.objects.filter(id__in = items.values('learner_submission_id'))
+            #retrieve perspectives from submissions
+            perspectives_already_curated = TemplateItem.objects.filter(id__in = submissions.values('selected_perspective_id'))
+
+            self.fields['item'] = forms.ModelChoiceField(queryset=LearnerSubmissionItem.objects.filter(
+                learner_submission=LearnerPerspectiveSubmission.objects.filter(activity=self.activity).exclude(selected_perspective__in= perspectives_already_curated)))
+        else:
+
+
+            # !!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI user is set up !!!!!!!!!!!!!!!
+            self.fields['item']  = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
+                learner_submission= LearnerPerspectiveSubmission.objects.filter(activity=self.activity)))
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = "form-horizontal"
@@ -261,3 +282,4 @@ class CurationItemChooseForm(forms.Form):
                 Submit("Submit", "Submit")
             )
         )
+

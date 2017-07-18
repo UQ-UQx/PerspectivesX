@@ -57,11 +57,13 @@ def student_submission(request, activity_name_slug, extra=0):
     # retrieve information from parameters
     activity = Activity.objects.get(slug=activity_name_slug)
     template = Template.objects.get(name=activity.template)
+    #replace 'marcolindley' wiht LTI user info
+    user = User.objects.get(username='marcolindley')
     context_dict = {'activity_name': activity.title}
     # retrieve the instance (it might not exists handle with a try except block)
     try:
         instance = LearnerPerspectiveSubmission.objects.filter(activity=activity).get \
-            (created_by=User.objects.filter(username='marcolindley'))
+            (created_by= user)
     except LearnerPerspectiveSubmission.DoesNotExist:
         instance = None
 
@@ -82,7 +84,7 @@ def student_submission(request, activity_name_slug, extra=0):
             # increment extra
             extra = int(request.POST['extra']) + 1
             # define the form and formset
-            context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user='marcolindley',
+            context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user=user.username,
                                                instance=instance)
             input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
             # prepopulate the formset with pre_existing_answers
@@ -90,7 +92,7 @@ def student_submission(request, activity_name_slug, extra=0):
             context_dict['formset'] = formset
 
         else:  # When form is submited generate the form from the activity and template name
-            form = LearnerForm(request.POST, template_name=template.name, activity=activity, user='marcolindley',
+            form = LearnerForm(request.POST, template_name=template.name, activity=activity, user=user.username,
                                instance=instance)
             context_dict['form'] = form
             # if form is valid
@@ -127,7 +129,7 @@ def student_submission(request, activity_name_slug, extra=0):
                     # curation score = number of curated items on this activity by user/ activity.minimum_curation
                     # replace "marcoLindley" with LTI user info
                     curation_score = min(1, float(CuratedItem.objects.filter(
-                        curator=User.objects.get(username="marcolindley")).filter(
+                        curator=user).filter(
                         item__in=LearnerSubmissionItem.objects.filter(
                             learner_submission=LearnerPerspectiveSubmission.objects.filter(
                                 activity=activity))).count()) / activity.minimum_curation) * 100
@@ -135,9 +137,12 @@ def student_submission(request, activity_name_slug, extra=0):
                     total_score = (participation_score * activity.contribution_score / 100) + \
                                   (curation_score * activity.curation_score / 100)
 
-                    SubmissionScore.objects.create(submission=submission, participation_grade=participation_score,
-                                                   curation_grade=curation_score,
-                                                   total_grade=total_score)
+                    score = SubmissionScore.objects.get_or_create(submission=submission)[0]
+                    print(score)
+                    score.participation_grade=participation_score
+                    score.curation_grade=curation_score
+                    score.total_grade=total_score
+                    score.save()
 
                     return index(request)
 
@@ -158,7 +163,7 @@ def student_submission(request, activity_name_slug, extra=0):
                 print form.errors
 
     else:
-        context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user='marcolindley',
+        context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user=user.username,
                                            instance=instance)
         input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
         formset = input_form_set(queryset=pre_existing_answers)
@@ -226,19 +231,21 @@ def create_template(request):
     return render(request, 'create_template.html', context_dict)
 
 
-def choose_curate_item(request, activity_name_slug):
+def choose_curate_item(request, activity_name_slug,curator, all = False):
     activity = Activity.objects.get(slug=activity_name_slug)
     if request.method == 'POST':
-        form = CurationItemChooseForm(request.POST, activity=activity)
+        #if all == true limit the choices to perspectives that have not been curated yet
+        form = CurationItemChooseForm(request.POST, activity=activity, all = all, curator = curator)
         if form.is_valid():
             item = form.cleaned_data['item']
             return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug, item.id))
         else:
             print form.errors
     else:
-        form = CurationItemChooseForm(activity=activity)
+        form = CurationItemChooseForm(activity=activity, all = all,curator = curator)
 
     return render(request, 'choose_curation_item.html', {'form': form})
+
 
 
 def curate_item(request, activity_name_slug, item=None):
@@ -254,8 +261,11 @@ def curate_item(request, activity_name_slug, item=None):
         RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
         ALL = 'Allow Learners to curate all perspectives'
 
-        if curator_mode == SELECTED or curator_mode == ALL:
-            return choose_curate_item(request, activity_name_slug)
+        if curator_mode == SELECTED :
+            return choose_curate_item(request, activity_name_slug,curator)
+
+        if curator_mode == ALL:
+            return choose_curate_item(request, activity_name_slug, curator,all = True)
 
         if curator_mode == RANDOM:
             item_list = list(LearnerSubmissionItem.objects.filter(
