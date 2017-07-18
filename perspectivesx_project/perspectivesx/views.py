@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse,HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, TemplateCreatorForm, TemplateItemForm, \
     ItemCuratorForm, CurationItemChooseForm
 from functools import partial, wraps
@@ -123,17 +123,17 @@ def student_submission(request, activity_name_slug, extra=0):
                     # create the Submission score object attached to this submission
                     # participation score = number of submited contribution/activity.minimum_contribution
                     # max score is 100% hence limit i/activity.minimum_contribution to 1
-                    participation_score = min(1, i / activity.minimum_contribution) * 100
+                    participation_score = min(1, float(i) / activity.minimum_contribution) * 100
                     # curation score = number of curated items on this activity by user/ activity.minimum_curation
                     # replace "marcoLindley" with LTI user info
-                    curation_score = min(1, CuratedItem.objects.filter(
+                    curation_score = min(1, float(CuratedItem.objects.filter(
                         curator=User.objects.get(username="marcolindley")).filter(
-                        item=LearnerSubmissionItem.objects.filter(
+                        item__in=LearnerSubmissionItem.objects.filter(
                             learner_submission=LearnerPerspectiveSubmission.objects.filter(
-                                activity=activity))).count() / activity.minimum_curation) * 100
+                                activity=activity))).count()) / activity.minimum_curation) * 100
 
                     total_score = (participation_score * activity.contribution_score / 100) + \
-                                  (curation_score * activity.contribution_score / 100)
+                                  (curation_score * activity.curation_score / 100)
 
                     SubmissionScore.objects.create(submission=submission, participation_grade=participation_score,
                                                    curation_grade=curation_score,
@@ -226,65 +226,81 @@ def create_template(request):
     return render(request, 'create_template.html', context_dict)
 
 
-
-
-def choose_curate_item(request,activity_name_slug):
+def choose_curate_item(request, activity_name_slug):
     activity = Activity.objects.get(slug=activity_name_slug)
-    print("MADE IT HERE YO")
     if request.method == 'POST':
-        form = CurationItemChooseForm(request.POST , activity= activity)
+        form = CurationItemChooseForm(request.POST, activity=activity)
         if form.is_valid():
             item = form.cleaned_data['item']
-            return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug,item.id))
+            return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug, item.id))
         else:
             print form.errors
     else:
-        form = CurationItemChooseForm(activity = activity)
+        form = CurationItemChooseForm(activity=activity)
 
     return render(request, 'choose_curation_item.html', {'form': form})
 
 
-
-
-def curate_item(request, activity_name_slug, item  = None):
-
+def curate_item(request, activity_name_slug, item=None):
     context_dict = {}
     # retrieve the item to curate
     activity = Activity.objects.get(slug=activity_name_slug)
-    #Check wether item is set, if not either let the user select one or assign one randomly
-    if( item == None):
+    #replace with LTI info
+    curator = User.objects.get(username="marcolindley")
+    # Check wether item is set, if not either let the user select one or assign one randomly
+    if (item == None):
         curator_mode = activity.enable_curation
         SELECTED = 'Allow learners to choose a perspective to curate'
         RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
         ALL = 'Allow Learners to curate all perspectives'
 
         if curator_mode == SELECTED or curator_mode == ALL:
-            return choose_curate_item(request,activity_name_slug)
+            return choose_curate_item(request, activity_name_slug)
 
         if curator_mode == RANDOM:
             item_list = list(LearnerSubmissionItem.objects.filter(
-                learner_submission= LearnerPerspectiveSubmission.objects.filter(activity= activity)
+                learner_submission=LearnerPerspectiveSubmission.objects.filter(activity=activity)
             ))
-            #the id is needed rather the the actual item object
-            item = item_list[randint(0,len(item_list)-1)].id
+            # the id is needed rather the the actual item object
+            item = item_list[randint(0, len(item_list) - 1)].id
     else:
-        #parse the item id string into an integer
+        # parse the item id string into an integer
         item = int(item)
 
     if request.method == 'POST':
-        form = ItemCuratorForm(request.POST, curator=User.objects.get(username = "marcolindley"), item = item)
+        form = ItemCuratorForm(request.POST, curator=curator, item=item)
         context_dict['form'] = form
         if form.is_valid():
+            # save the curated item
             form.save(commit=True)
+            # update the grade of the SubmissionScore to reflect the new Curation score, update marcoLindley with lti user info
+            score = SubmissionScore.objects.get(submission=
+                                                LearnerPerspectiveSubmission.objects.filter(created_by=curator).
+                                                get(activity=activity))
+
+            #retrieve all items for this activity
+            items = LearnerSubmissionItem.objects.filter(learner_submission=LearnerPerspectiveSubmission.objects.filter(
+                    activity=activity))
+            #update curation score
+            curation_score = min(1, (float(CuratedItem.objects.filter(curator= curator).filter(item__in = items).count()) / activity.minimum_curation)) * 100
+            #update total score
+            total_score = round((score.participation_grade * activity.contribution_score / 100) + \
+                          (curation_score * activity.curation_score / 100))
+            #update the score object
+            score.curation_grade = curation_score
+            score.total_grade = total_score
+            #save
+            score.save()
+
             return index(request)
         else:
             print form.errors
     else:
-        #replace marcolindley with LTI user info
-        form = ItemCuratorForm(curator=User.objects.get(username = "marcolindley"), item = item)
-        context_dict['form']= form
+        # replace marcolindley with LTI user info
+        form = ItemCuratorForm(curator=curator, item=item)
+        context_dict['form'] = form
 
-    context_dict['item'] = LearnerSubmissionItem.objects.get(id = item).item
+    context_dict['item'] = LearnerSubmissionItem.objects.get(id=item).item
     return render(request, 'item_curator.html', context_dict)
 
 

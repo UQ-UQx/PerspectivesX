@@ -159,9 +159,13 @@ class CuratedItem(models.Model):
     def __unicode__(self):
         return " {}. Curated by {}".format(self.item, self.curator)
 
+    class Meta:
+        ordering = ['curator', 'item', 'score']
+        unique_together = ('item','curator')
+
 
 class SubmissionScore(models.Model):
-    submission = models.ForeignKey(LearnerPerspectiveSubmission)
+    submission = models.OneToOneField(LearnerPerspectiveSubmission)
     participation_grade = models.IntegerField()
     curation_grade = models.IntegerField()
     total_grade = models.IntegerField()
