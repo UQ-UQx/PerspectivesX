@@ -127,7 +127,8 @@ class LearnerPerspectiveSubmission(models.Model):
     class Meta:
         ordering = ["activity","created_by"]
         verbose_name_plural = "Learner Submissions"
-        unique_together = ('activity','created_by' )
+        #Only one submission by the user allowed for each perspective of an activity
+        unique_together = ('activity','created_by','selected_perspective' )
 
 class LearnerSubmissionItem(models.Model):
     '''

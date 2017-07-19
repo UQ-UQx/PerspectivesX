@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, TemplateCreatorForm, TemplateItemForm, \
-    ItemCuratorForm, CurationItemChooseForm
+    ItemCuratorForm, ItemChooseForm
 from functools import partial, wraps
 from django.forms import modelformset_factory, formset_factory
 from models import Activity, Template, TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission, User
@@ -46,7 +46,35 @@ def add_activity(request):
     return render(request, 'add_activity.html', {'form': form})
 
 
-def student_submission(request, activity_name_slug, extra=0):
+def choose_perspective(request,activity_name_slug, user,all = False):
+    activity = Activity.objects.get(slug=activity_name_slug)
+    if (all):
+        #the user must choose a perspective that he hasn't alread submited
+        # retrive Submission for this activity from the user
+        # !!!!!!!!!!!!!!!! UPDATE once LTI is set up !!!!!!!!!!!!
+        already_submitted = LearnerPerspectiveSubmission.objects.filter(created_by = user).filter(activty = activity)
+        #retrieve perspecitves from already_submited
+        submitted_perspectives = TemplateItem.objects.filter(id__in = already_submitted.values('selected_perspective_id'))
+        # retrive perspectives from template excluding the already submited ones
+        queryset = TemplateItem.objects.filter(template = activity.template).exclude(id__in = submitted_perspectives)
+
+    else:
+        # !!!!! update to exclude items from curator once LTI is set up!!!!!!!!!!!
+        queryset = TemplateItem.objects.filter(template=activity.template)
+
+    if request.method == 'POST':
+        form = ItemChooseForm(request.POST, queryset= queryset, item = "perspective to submit")
+        if form.is_valid():
+            item = form.cleaned_data['item']
+            return HttpResponseRedirect('/perspectivesX/submission/{}/{}/'.format(activity_name_slug, item.id))
+        else:
+            print form.errors
+    else:
+        form = ItemChooseForm(queryset= queryset, item = "perspective to submit")
+
+    return render(request, 'choose_item.html', {'form': form})
+
+def student_submission(request, activity_name_slug, extra=0, perspective = None):
     """
     View for student submission page
     Displays the submission form in function of the undertaken activity
@@ -54,11 +82,36 @@ def student_submission(request, activity_name_slug, extra=0):
     :param activity_name_slug: slug name of the activity
     :return:
     """
+
     # retrieve information from parameters
     activity = Activity.objects.get(slug=activity_name_slug)
     template = Template.objects.get(name=activity.template)
-    #replace 'marcolindley' wiht LTI user info
+    # replace 'marcolindley' wiht LTI user info
     user = User.objects.get(username='marcolindley')
+    # Check wether perspective is set, if not either let the user select one or assign one randomly
+    if (perspective == None):
+        perspective_mode = activity.perspective_selection
+        SELECTED = 'Learner Selected'
+        RANDOM = 'Randomly Assigned'
+        ALL = 'Learner Completes All Perspectives'
+
+        if perspective_mode == SELECTED:
+            return choose_perspective(request, activity_name_slug, user)
+
+        if perspective_mode == ALL:
+            return choose_perspective(request, activity_name_slug, user, all=True)
+
+        if perspective_mode == RANDOM:
+            perspective_list = list(TemplateItem.objects.filter(
+                template= activity.template
+            ))
+            # the id is needed rather the the actual item object
+            perspective = perspective_list[randint(0, len(perspective_list) - 1)].id
+    else:
+        # parse the item id string into an integer
+        perspective = int(perspective)
+
+
     context_dict = {'activity_name': activity.title}
     # retrieve the instance (it might not exists handle with a try except block)
     try:
@@ -84,15 +137,15 @@ def student_submission(request, activity_name_slug, extra=0):
             # increment extra
             extra = int(request.POST['extra']) + 1
             # define the form and formset
-            context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user=user.username,
-                                               instance=instance)
+            context_dict['form'] = LearnerForm( activity=activity, user=user.username,perspective = perspective
+                                                ,instance=instance)
             input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
             # prepopulate the formset with pre_existing_answers
             formset = input_form_set(queryset=pre_existing_answers)
             context_dict['formset'] = formset
 
         else:  # When form is submited generate the form from the activity and template name
-            form = LearnerForm(request.POST, template_name=template.name, activity=activity, user=user.username,
+            form = LearnerForm(request.POST,perspective = perspective, activity=activity, user=user.username,
                                instance=instance)
             context_dict['form'] = form
             # if form is valid
@@ -138,7 +191,6 @@ def student_submission(request, activity_name_slug, extra=0):
                                   (curation_score * activity.curation_score / 100)
 
                     score = SubmissionScore.objects.get_or_create(submission=submission)[0]
-                    print(score)
                     score.participation_grade=participation_score
                     score.curation_grade=curation_score
                     score.total_grade=total_score
@@ -163,7 +215,7 @@ def student_submission(request, activity_name_slug, extra=0):
                 print form.errors
 
     else:
-        context_dict['form'] = LearnerForm(template_name=template.name, activity=activity, user=user.username,
+        context_dict['form'] = LearnerForm(perspective = perspective, activity=activity, user=user.username,
                                            instance=instance)
         input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
         formset = input_form_set(queryset=pre_existing_answers)
@@ -233,18 +285,37 @@ def create_template(request):
 
 def choose_curate_item(request, activity_name_slug,curator, all = False):
     activity = Activity.objects.get(slug=activity_name_slug)
+    if (all):
+        # retrive all LearnerSubmissionItems from activity
+        # !!!!!!!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI is set up !!!!!!!!!!!
+        learner_submission_items = LearnerSubmissionItem.objects.filter(learner_submission__activity=activity)
+        # retirve items already curated
+        items_already_curated = CuratedItem.objects.filter(curator=curator).filter(item__in=learner_submission_items)
+        # retrieve actual items from curated items
+        items = LearnerSubmissionItem.objects.filter(id__in=items_already_curated.values('item_id'))
+        # retrieve learner submission from actual items
+        submissions = LearnerPerspectiveSubmission.objects.filter(id__in=items.values('learner_submission_id'))
+        # retrieve perspectives from submissions
+        perspectives_already_curated = TemplateItem.objects.filter(id__in=submissions.values('selected_perspective_id'))
+
+        queryset = LearnerSubmissionItem.objects.filter(learner_submission=LearnerPerspectiveSubmission.objects.filter(
+            activity=activity).exclude(selected_perspective__in=perspectives_already_curated))
+    else:
+        # !!!!! update to exclude items from curator once LTI is set up!!!!!!!!!!!
+        queryset = LearnerSubmissionItem.objects.filter(
+            learner_submission=LearnerPerspectiveSubmission.objects.filter(activity=activity))
+
     if request.method == 'POST':
-        #if all == true limit the choices to perspectives that have not been curated yet
-        form = CurationItemChooseForm(request.POST, activity=activity, all = all, curator = curator)
+        form = ItemChooseForm(request.POST, queryset= queryset, item = "item to curate")
         if form.is_valid():
             item = form.cleaned_data['item']
             return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug, item.id))
         else:
             print form.errors
     else:
-        form = CurationItemChooseForm(activity=activity, all = all,curator = curator)
+        form = ItemChooseForm(queryset= queryset, item = "item to curate")
 
-    return render(request, 'choose_curation_item.html', {'form': form})
+    return render(request, 'choose_item.html', {'form': form})
 
 
 

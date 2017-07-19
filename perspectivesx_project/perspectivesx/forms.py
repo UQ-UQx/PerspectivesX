@@ -105,7 +105,7 @@ class LearnerSubmissionItemForm(forms.ModelForm):
 
 class LearnerForm(forms.ModelForm):
     #perspective_selection stores the perspective choosen by the learner
-    selected_perspective = forms.ModelChoiceField(queryset=[], label = 'Choose a perspective')
+    selected_perspective = forms.ModelChoiceField(queryset=[])
 
     NOSHARE = "Don't Share"
     ANON = 'Share Anonymously'
@@ -125,16 +125,17 @@ class LearnerForm(forms.ModelForm):
     def __init__(self,*args, **kwargs):
 
         #retrive args from kwargs array
-        self.template_name = kwargs.pop('template_name')
+        # self.template_name = kwargs.pop('template_name')
         self.activity = kwargs.pop('activity')
         self.user = kwargs.pop('user')
+        self.perspective = kwargs.pop('perspective')
         # call super.__init__()
         super(LearnerForm, self).__init__(*args, **kwargs)
 
         #set the hidden field values with given parameters
         self.fields['selected_perspective']  = forms.ModelChoiceField(queryset=TemplateItem.objects.filter(
-            template = Template.objects.filter(name= self.template_name)),
-            label="Choose a perspective:", widget = forms.RadioSelect, empty_label= None)
+            id = self.perspective), initial = self.perspective, widget = forms.HiddenInput, empty_label= None)
+
         self.fields['activity'].initial = self.activity
         self.fields['created_by'].initial = User.objects.get(username = self.user)
 
@@ -239,37 +240,40 @@ class ItemCuratorForm(forms.ModelForm):
         model = CuratedItem
         fields = ('item', 'score','curator')
 
-class CurationItemChooseForm(forms.Form):
+class ItemChooseForm(forms.Form):
     item = forms.ModelChoiceField(queryset = [])
 
     def __init__(self,*args,**kwargs):
-        self.activity = kwargs.pop('activity')
-        self.all = kwargs.pop('all')
-        self.curator = kwargs.pop('curator')
+        self.queryset = kwargs.pop('queryset')
+        self.item = kwargs.pop('item')
+        # self.activity = kwargs.pop('activity')
+        # self.all = kwargs.pop('all')
+        # self.curator = kwargs.pop('curator')
         # call super
-        super(CurationItemChooseForm, self).__init__(*args, **kwargs)
+        super(ItemChooseForm, self).__init__(*args, **kwargs)
         # define fields item and curator and set heir values
-        if(self.all):
-            #retrive all LearnerSubmissionItems from activity
-            # !!!!!!!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI is set up !!!!!!!!!!!
-            learner_submission_items = LearnerSubmissionItem.objects.filter(learner_submission__activity= self.activity)
-            #retirve items already curated
-            items_already_curated = CuratedItem.objects.filter(curator = self.curator).filter(item__in = learner_submission_items )
-            #retrieve actual items from curated items
-            items = LearnerSubmissionItem.objects.filter(id__in = items_already_curated.values('item_id'))
-            #retrieve learner submission from actual items
-            submissions = LearnerPerspectiveSubmission.objects.filter(id__in = items.values('learner_submission_id'))
-            #retrieve perspectives from submissions
-            perspectives_already_curated = TemplateItem.objects.filter(id__in = submissions.values('selected_perspective_id'))
-
-            self.fields['item'] = forms.ModelChoiceField(queryset=LearnerSubmissionItem.objects.filter(
-                learner_submission=LearnerPerspectiveSubmission.objects.filter(activity=self.activity).exclude(selected_perspective__in= perspectives_already_curated)))
-        else:
-
-
-            # !!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI user is set up !!!!!!!!!!!!!!!
-            self.fields['item']  = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
-                learner_submission= LearnerPerspectiveSubmission.objects.filter(activity=self.activity)))
+        # if(self.all):
+        #     #retrive all LearnerSubmissionItems from activity
+        #     # !!!!!!!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI is set up !!!!!!!!!!!
+        #     learner_submission_items = LearnerSubmissionItem.objects.filter(learner_submission__activity= self.activity)
+        #     #retirve items already curated
+        #     items_already_curated = CuratedItem.objects.filter(curator = self.curator).filter(item__in = learner_submission_items )
+        #     #retrieve actual items from curated items
+        #     items = LearnerSubmissionItem.objects.filter(id__in = items_already_curated.values('item_id'))
+        #     #retrieve learner submission from actual items
+        #     submissions = LearnerPerspectiveSubmission.objects.filter(id__in = items.values('learner_submission_id'))
+        #     #retrieve perspectives from submissions
+        #     perspectives_already_curated = TemplateItem.objects.filter(id__in = submissions.values('selected_perspective_id'))
+        #
+        #     self.fields['item'] = forms.ModelChoiceField(queryset=LearnerSubmissionItem.objects.filter(
+        #         learner_submission=LearnerPerspectiveSubmission.objects.filter(activity=self.activity).exclude(selected_perspective__in= perspectives_already_curated)))
+        # else:
+        #
+        #
+        #     # !!!!!!!!!!! UPDATE TO EXCLUDE items from curator once LTI user is set up !!!!!!!!!!!!!!!
+        # self.fields['item']  = forms.ModelChoiceField(queryset = LearnerSubmissionItem.objects.filter(
+        #     learner_submission= LearnerPerspectiveSubmission.objects.filter(activity=self.activity)))
+        self.fields['item'] = forms.ModelChoiceField(queryset=self.queryset)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_class = "form-horizontal"
@@ -277,9 +281,9 @@ class CurationItemChooseForm(forms.Form):
         self.helper.label_class = 'control-label col-sm-2'
         # define form layout
         self.helper.layout = Layout(
-            Fieldset('Choose Item to Curate', 'item'),
+            Fieldset('Choose {}'.format(self.item), 'item'),
             FormActions(
-                Submit("Submit", "Submit")
+                Submit("Continue", "Continue")
             )
         )
 
