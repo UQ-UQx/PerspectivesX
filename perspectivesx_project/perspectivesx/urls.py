@@ -1,9 +1,11 @@
 from django.conf.urls import url
-from .views import add_activity, index, student_submission, create_template, curate_item
+from .views import add_activity, index, student_submission, create_template, curate_item, LTIindex, LTInot_authorized
 
 urlpatterns = [
     url(r'^add_activity/$', add_activity, name='add_activity'),
     url(r'^$', index, name='index'),
+    url(r'^LTI/$',LTIindex,name = 'LTIindex'),
+    url(r'^not_authorized', LTInot_authorized,name = 'LTInot_authorized'),
     url(r'^submission/(?P<activity_name_slug>[\w\-]+)/$', student_submission, name='submission'),
     url(r'^submission/(?P<activity_name_slug>[\w\-]+)/(?P<perspective>\d+)/$', student_submission,
         name="Defined submission"),

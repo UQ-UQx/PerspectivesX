@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+{% load render_bundle from webpack_loader %}
+{% load staticfiles %}
+
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -9,34 +12,35 @@
 
     <meta name="description" content="Source code generated using layoutit.com">
     <meta name="author" content = "Marco Lindley">
-
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+      <link href="{% static "css/bootstrap.min.css" %}" rel = "stylesheet">
+      <link href="{% static "css/style.css" %}" rel="stylesheet">
+      <script type = "text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+      <script type = "text/javascript" src="{% static "js/bootstrap.min.js" %}"></script>
+      <script type = "text/javascript" src="{%  static "js/scripts.js"%}"></script>
 
   </head>
   <body>
 
     <div class="container-fluid">
-	<div class="row">
-		<div class="col-md-12">
-			<h3>
-				PerspectivesX: The world through your eyes
-			</h3>
-        <div class="well well-sm">
+        <div id = 'container'>
+             {% render_bundle 'main' %}
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <h3>
+                    PerspectivesX: The world through your eyes
+                </h3>
+                <div class="well well-sm">
+                    This is just a dummy index webpage</br></br>
+                    Here is a link to <a href = "{% url 'add_activity' %}">Add activity </a> form</br></br>
+                    {%for  activity in activities%}
+                        Here is a link to <a href = "{% url 'submission' activity.slug%}"> {{ activity }} Submission </a> form </br></br>
+                        Here is a link to <a href = "{% url 'Item Curator' activity.slug %}"> {{ activity }} Curation </a> form </br></br>
+                    {% endfor  %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-</div>
-            This is just a dummy index webpage</br></br>
-            Here is a link to <a href = "{% url 'add_activity' %}">Add activity </a> form</br></br>
-            {{ activitities }}
-            {%for  activity in activities%}
-                Here is a link to <a href = "{% url 'submission' activity.slug%}"}> {{ activity }} Submission </a> form </br></br>
-                Here is a link to <a href = "{% url 'Item Curator' activity.slug %}"> {{ activity }} Curation </a> form </br></br>
-            {% endfor  %}
-		</div>
-	</div>
-</div>
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/scripts.js"></script>
   </body>
 </html>

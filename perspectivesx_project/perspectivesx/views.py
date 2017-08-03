@@ -8,6 +8,11 @@ from models import Activity, Template, TemplateItem, LearnerSubmissionItem, Lear
 from rest_framework import viewsets
 from .serializers import *
 from random import randint
+from django.views.decorators.csrf import csrf_exempt
+from django_auth_lti.decorators import lti_role_required
+from django.views.decorators.clickjacking import xframe_options_exempt
+
+
 
 # import pdb; pdb.set_trace()
 
@@ -25,6 +30,21 @@ def index(request):
     """
     return render(request, 'index.html', {'activities': Activity.objects.all()})
 
+@csrf_exempt
+@xframe_options_exempt
+@lti_role_required(['Instructor', 'Student'], redirect_url= '/perspectivesX/not_authorized/')
+def LTIindex(request):
+    print "resource_link_id",request.LTI.get('resource_link_id')
+    print request.LTI
+    print request.user
+    if request.LTI.get('resource_link_id') is not None:
+        msg = "Resource Link ID!" + request.LTI.get('resource_link_id')
+    else:
+        msg = "No Resource Link is set"
+    return HttpResponse(msg)
+
+def LTInot_authorized(request):
+    return render(request,'not_authorized.html',{'request':request})
 
 def add_activity(request):
     """
