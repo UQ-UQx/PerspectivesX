@@ -5,12 +5,13 @@ from forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, Template
 from functools import partial, wraps
 from django.forms import modelformset_factory, formset_factory
 from models import Activity, Template, TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission, User
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from .serializers import *
 from random import randint
 from django.views.decorators.csrf import csrf_exempt
 from django_auth_lti.decorators import lti_role_required
 from django.views.decorators.clickjacking import xframe_options_exempt
+
 
 
 
@@ -438,3 +439,21 @@ class CuratedItemViewSet(viewsets.ModelViewSet):
 class SubmissionScoreViewSet(viewsets.ModelViewSet):
     queryset = SubmissionScore.objects.all()
     serializer_class = SubmissionScoreSerializer
+
+
+class UserSubmissionItemList(generics.ListAPIView):
+    serializer_class = LearnerSubmissionItemSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        # !!! replace this with proper user info !!!
+        submissions = LearnerPerspectiveSubmission.objects.filter(created_by = User.objects.get(username="marcolindley"))
+        return LearnerSubmissionItem.objects.filter(learner_submission_id__in = submissions )
+
+class UserCuratedItemList(generics.ListAPIView):
+    serializer_class =  LearnerSubmissionItemSerializer
+
+    def get_queryset(self):
+        curated = CuratedItem.objects.filter(curator = User.objects.get(username="marcolindley"))
+        return LearnerSubmissionItem.objects.filter(id__in = curated.values('item'))

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from models import *
 
 class TemplateSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Template
         fields = '__all__'
@@ -21,10 +22,14 @@ class LearnerPespectiveSubmissionSerializer(serializers.ModelSerializer):
         model = LearnerPerspectiveSubmission
         fields = '__all__'
 
+
 class LearnerSubmissionItemSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(source = "__unicode__")
     class Meta:
         model = LearnerSubmissionItem
         fields = '__all__'
+        read_only_fields = ('description',)
+
 
 class CuratedItemSerializer(serializers.ModelSerializer):
     class Meta:
