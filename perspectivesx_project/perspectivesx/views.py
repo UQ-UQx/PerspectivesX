@@ -12,9 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django_auth_lti.decorators import lti_role_required
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-
-
-
 # import pdb; pdb.set_trace()
 
 """
@@ -31,11 +28,12 @@ def index(request):
     """
     return render(request, 'index.html', {'activities': Activity.objects.all()})
 
+
 @csrf_exempt
 @xframe_options_exempt
-@lti_role_required(['Instructor', 'Student'], redirect_url= '/perspectivesX/not_authorized/')
+@lti_role_required(['Instructor', 'Student'], redirect_url='/perspectivesX/not_authorized/')
 def LTIindex(request):
-    print "resource_link_id",request.LTI.get('resource_link_id')
+    print "resource_link_id", request.LTI.get('resource_link_id')
     print request.LTI
     print request.user
     if request.LTI.get('resource_link_id') is not None:
@@ -44,8 +42,10 @@ def LTIindex(request):
         msg = "No Resource Link is set"
     return HttpResponse(msg)
 
+
 def LTInot_authorized(request):
-    return render(request,'not_authorized.html',{'request':request})
+    return render(request, 'not_authorized.html', {'request': request})
+
 
 def add_activity(request):
     """
@@ -67,35 +67,36 @@ def add_activity(request):
     return render(request, 'add_activity.html', {'form': form})
 
 
-def choose_perspective(request,activity_name_slug, user,all = False):
+def choose_perspective(request, activity_name_slug, user, all=False):
     activity = Activity.objects.get(slug=activity_name_slug)
     if (all):
-        #the user must choose a perspective that he hasn't alread submited
+        # the user must choose a perspective that he hasn't alread submited
         # retrive Submission for this activity from the user
         # !!!!!!!!!!!!!!!! UPDATE once LTI is set up !!!!!!!!!!!!
-        already_submitted = LearnerPerspectiveSubmission.objects.filter(created_by = user).filter(activty = activity)
-        #retrieve perspecitves from already_submited
-        submitted_perspectives = TemplateItem.objects.filter(id__in = already_submitted.values('selected_perspective_id'))
+        already_submitted = LearnerPerspectiveSubmission.objects.filter(created_by=user).filter(activty=activity)
+        # retrieve perspecitves from already_submited
+        submitted_perspectives = TemplateItem.objects.filter(id__in=already_submitted.values('selected_perspective_id'))
         # retrive perspectives from template excluding the already submited ones
-        queryset = TemplateItem.objects.filter(template = activity.template).exclude(id__in = submitted_perspectives)
+        queryset = TemplateItem.objects.filter(template=activity.template).exclude(id__in=submitted_perspectives)
 
     else:
         # !!!!! update to exclude items from curator once LTI is set up!!!!!!!!!!!
         queryset = TemplateItem.objects.filter(template=activity.template)
 
     if request.method == 'POST':
-        form = ItemChooseForm(request.POST, queryset= queryset, item = "perspective to submit")
+        form = ItemChooseForm(request.POST, queryset=queryset, item="perspective to submit")
         if form.is_valid():
             item = form.cleaned_data['item']
             return HttpResponseRedirect('/perspectivesX/submission/{}/{}/'.format(activity_name_slug, item.id))
         else:
             print form.errors
     else:
-        form = ItemChooseForm(queryset= queryset, item = "perspective to submit")
+        form = ItemChooseForm(queryset=queryset, item="perspective to submit")
 
     return render(request, 'choose_item.html', {'form': form})
 
-def student_submission(request, activity_name_slug, extra=0, perspective = None):
+
+def student_submission(request, activity_name_slug, extra=0, perspective=None):
     """
     View for student submission page
     Displays the submission form in function of the undertaken activity
@@ -124,7 +125,7 @@ def student_submission(request, activity_name_slug, extra=0, perspective = None)
 
         if perspective_mode == RANDOM:
             perspective_list = list(TemplateItem.objects.filter(
-                template= activity.template
+                template=activity.template
             ))
             # the id is needed rather the the actual item object
             perspective = perspective_list[randint(0, len(perspective_list) - 1)].id
@@ -132,12 +133,11 @@ def student_submission(request, activity_name_slug, extra=0, perspective = None)
         # parse the item id string into an integer
         perspective = int(perspective)
 
-
     context_dict = {'activity_name': activity.title}
     # retrieve the instance (it might not exists handle with a try except block)
     try:
         instance = LearnerPerspectiveSubmission.objects.filter(activity=activity).get \
-            (created_by= user)
+            (created_by=user)
     except LearnerPerspectiveSubmission.DoesNotExist:
         instance = None
 
@@ -158,15 +158,15 @@ def student_submission(request, activity_name_slug, extra=0, perspective = None)
             # increment extra
             extra = int(request.POST['extra']) + 1
             # define the form and formset
-            context_dict['form'] = LearnerForm( activity=activity, user=user.username,perspective = perspective
-                                                ,instance=instance)
+            context_dict['form'] = LearnerForm(activity=activity, user=user.username, perspective=perspective
+                                               , instance=instance)
             input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
             # prepopulate the formset with pre_existing_answers
             formset = input_form_set(queryset=pre_existing_answers)
             context_dict['formset'] = formset
 
         else:  # When form is submited generate the form from the activity and template name
-            form = LearnerForm(request.POST,perspective = perspective, activity=activity, user=user.username,
+            form = LearnerForm(request.POST, perspective=perspective, activity=activity, user=user.username,
                                instance=instance)
             context_dict['form'] = form
             # if form is valid
@@ -212,9 +212,9 @@ def student_submission(request, activity_name_slug, extra=0, perspective = None)
                                   (curation_score * activity.curation_score / 100)
 
                     score = SubmissionScore.objects.get_or_create(submission=submission)[0]
-                    score.participation_grade=participation_score
-                    score.curation_grade=curation_score
-                    score.total_grade=total_score
+                    score.participation_grade = participation_score
+                    score.curation_grade = curation_score
+                    score.total_grade = total_score
                     score.save()
 
                     return index(request)
@@ -236,7 +236,7 @@ def student_submission(request, activity_name_slug, extra=0, perspective = None)
                 print form.errors
 
     else:
-        context_dict['form'] = LearnerForm(perspective = perspective, activity=activity, user=user.username,
+        context_dict['form'] = LearnerForm(perspective=perspective, activity=activity, user=user.username,
                                            instance=instance)
         input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
         formset = input_form_set(queryset=pre_existing_answers)
@@ -304,7 +304,7 @@ def create_template(request):
     return render(request, 'create_template.html', context_dict)
 
 
-def choose_curate_item(request, activity_name_slug,curator, all = False):
+def choose_curate_item(request, activity_name_slug, curator, all=False):
     activity = Activity.objects.get(slug=activity_name_slug)
     if (all):
         # retrive all LearnerSubmissionItems from activity
@@ -327,24 +327,23 @@ def choose_curate_item(request, activity_name_slug,curator, all = False):
             learner_submission=LearnerPerspectiveSubmission.objects.filter(activity=activity))
 
     if request.method == 'POST':
-        form = ItemChooseForm(request.POST, queryset= queryset, item = "item to curate")
+        form = ItemChooseForm(request.POST, queryset=queryset, item="item to curate")
         if form.is_valid():
             item = form.cleaned_data['item']
             return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug, item.id))
         else:
             print form.errors
     else:
-        form = ItemChooseForm(queryset= queryset, item = "item to curate")
+        form = ItemChooseForm(queryset=queryset, item="item to curate")
 
     return render(request, 'choose_item.html', {'form': form})
-
 
 
 def curate_item(request, activity_name_slug, item=None):
     context_dict = {}
     # retrieve the item to curate
     activity = Activity.objects.get(slug=activity_name_slug)
-    #replace with LTI info
+    # replace with LTI info
     curator = User.objects.get(username="marcolindley")
     # Check wether item is set, if not either let the user select one or assign one randomly
     if (item == None):
@@ -353,11 +352,11 @@ def curate_item(request, activity_name_slug, item=None):
         RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
         ALL = 'Allow Learners to curate all perspectives'
 
-        if curator_mode == SELECTED :
-            return choose_curate_item(request, activity_name_slug,curator)
+        if curator_mode == SELECTED:
+            return choose_curate_item(request, activity_name_slug, curator)
 
         if curator_mode == ALL:
-            return choose_curate_item(request, activity_name_slug, curator,all = True)
+            return choose_curate_item(request, activity_name_slug, curator, all=True)
 
         if curator_mode == RANDOM:
             item_list = list(LearnerSubmissionItem.objects.filter(
@@ -380,18 +379,19 @@ def curate_item(request, activity_name_slug, item=None):
                                                 LearnerPerspectiveSubmission.objects.filter(created_by=curator).
                                                 get(activity=activity))
 
-            #retrieve all items for this activity
+            # retrieve all items for this activity
             items = LearnerSubmissionItem.objects.filter(learner_submission=LearnerPerspectiveSubmission.objects.filter(
-                    activity=activity))
-            #update curation score
-            curation_score = min(1, (float(CuratedItem.objects.filter(curator= curator).filter(item__in = items).count()) / activity.minimum_curation)) * 100
-            #update total score
+                activity=activity))
+            # update curation score
+            curation_score = min(1, (float(CuratedItem.objects.filter(curator=curator).filter(
+                item__in=items).count()) / activity.minimum_curation)) * 100
+            # update total score
             total_score = round((score.participation_grade * activity.contribution_score / 100) + \
-                          (curation_score * activity.curation_score / 100))
-            #update the score object
+                                (curation_score * activity.curation_score / 100))
+            # update the score object
             score.curation_grade = curation_score
             score.total_grade = total_score
-            #save
+            # save
             score.save()
 
             return index(request)
@@ -404,6 +404,18 @@ def curate_item(request, activity_name_slug, item=None):
 
     context_dict['item'] = LearnerSubmissionItem.objects.get(id=item).item
     return render(request, 'item_curator.html', context_dict)
+
+
+def display_perspective_items(request, activity, perspective):
+    # retrieve all items for perspective of activity
+    grid_activity = Activity.objects.get(id=activity);
+    template_item = TemplateItem.objects.get(id=perspective)
+    perspective_submissions = LearnerPerspectiveSubmission.objects.filter(activity=activity).filter(
+        selected_perspective=perspective)
+    perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=perspective_submissions)
+    return render(request, 'perspective_display.html',
+                  {'items': perspective_items, 'perspectiveName': template_item.name,
+                   'activityName': grid_activity.title})
 
 
 class TemplateViewSet(viewsets.ModelViewSet):
@@ -442,18 +454,51 @@ class SubmissionScoreViewSet(viewsets.ModelViewSet):
 
 
 class UserSubmissionItemList(generics.ListAPIView):
+    """
+    API List view used to retrieve all users submitted items for a particular perspective
+    """
     serializer_class = LearnerSubmissionItemSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        print(user)
+        perspective = self.kwargs['perspective']
+        activity = self.kwargs['activity']
         # !!! replace this with proper user info !!!
-        submissions = LearnerPerspectiveSubmission.objects.filter(created_by = User.objects.get(username="marcolindley"))
-        return LearnerSubmissionItem.objects.filter(learner_submission_id__in = submissions )
+        submissions = LearnerPerspectiveSubmission.objects.filter(activity = activity).filter(
+            created_by=User.objects.get(username="marcolindley")).filter(selected_perspective=perspective)
+        return LearnerSubmissionItem.objects.filter(learner_submission_id__in=submissions)
+
 
 class UserCuratedItemList(generics.ListAPIView):
-    serializer_class =  LearnerSubmissionItemSerializer
+    """
+    API List View used to retrieve all users Curated items for a particular perspective
+    """
+    serializer_class = LearnerSubmissionItemSerializer
 
     def get_queryset(self):
-        curated = CuratedItem.objects.filter(curator = User.objects.get(username="marcolindley"))
-        return LearnerSubmissionItem.objects.filter(id__in = curated.values('item'))
+        perspective = self.kwargs['perspective']
+        activity = self.kwargs['activity']
+        submissions = LearnerPerspectiveSubmission.objects.filter(activity= activity).filter(selected_perspective=perspective)
+        perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=submissions)
+        curated = CuratedItem.objects.filter(item__in=perspective_items).filter(
+            curator=User.objects.get(username="marcolindley"))
+        return LearnerSubmissionItem.objects.filter(id__in=curated.values('item'))
+
+
+class PerspectiveList(generics.ListAPIView):
+    """
+    API List view used to retrieve all perspectives linked to an activity(Template Items)
+    """
+    serializer_class = TemplateItemSerializer
+
+    def get_queryset(self):
+        activity = Activity.objects.get(id = self.kwargs['activity'])
+        return TemplateItem.objects.filter(template = activity.template)
+
+class ActivityList(generics.ListAPIView):
+    """
+    API list view used to retrieve all Activities
+    """
+    serializer_class = ActivitySerializer
+
+    def get_queryset(self):
+        return Activity.objects.all()
