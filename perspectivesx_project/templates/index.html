@@ -22,14 +22,17 @@
   <body>
 
     <div class="container-fluid">
-        <div id = 'container'>
+        <div class = jumbotron align = "center">
+             <h2>
+                    PerspectivesX: The world through your eyes
+             </h2>
+        </div>
+        <div class = "row" id = 'container'>
             {% render_bundle 'main' %}
         </div>
         <div class="row">
             <div class="col-md-12">
-                <h3>
-                    PerspectivesX: The world through your eyes
-                </h3>
+
                 <div class="well well-sm">
                     This is just a dummy index webpage</br></br>
                     Here is a link to <a href = "{% url 'add_activity' %}">Add activity </a> form</br></br>
