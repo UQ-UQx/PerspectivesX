@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load render_bundle from webpack_loader %}
+{% load crispy_forms_tags %}
 {% load staticfiles %}
 
 <html lang="en">
@@ -28,10 +28,21 @@
             PerspectivesX: The world through your eyes
         </h2>
     </div>
-    <div class="row" id='container'>
-        {% render_bundle 'main' %}
-    </div>
+        <div class = "well">
+            <div class = "alert-danger">
+                <p style = "margin-left:15px; margin-right:15px"> You are about to delete: {{ item }}<br> This could impact your grade ! </p>
+                <br>
+                <p style = "margin-left:15px">Item: </p>{{ item.item }}
+            </div>
+        </div>
+
+        <div class = "well">
+            {% crispy form %}
+        </div>
+
+
 </div>
+
 
 </body>
 </html>

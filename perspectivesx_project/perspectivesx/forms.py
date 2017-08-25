@@ -209,7 +209,7 @@ class TemplateCreatorForm(forms.ModelForm):
 
 class ItemCuratorForm(forms.ModelForm):
     item = forms.ModelChoiceField(queryset= [], widget = forms.HiddenInput)
-    score = forms.IntegerField(max_value=100, initial = 50)
+    comment = forms.CharField(required = False)
     curator = forms.ModelChoiceField(queryset=[], widget = forms.HiddenInput)
 
     def __init__(self,*args, **kwargs):
@@ -230,7 +230,7 @@ class ItemCuratorForm(forms.ModelForm):
         self.helper.label_class = 'control-label col-sm-2'
         # define form layout
         self.helper.layout = Layout(
-            Fieldset('Curation', 'score', 'item','curator'),
+            Fieldset('Curation', 'comment', 'item','curator'),
             FormActions(
                 Submit("Submit", "Submit")
             )
@@ -238,7 +238,7 @@ class ItemCuratorForm(forms.ModelForm):
 
     class Meta:
         model = CuratedItem
-        fields = ('item', 'score','curator')
+        fields = ('item', 'comment','curator')
 
 class ItemChooseForm(forms.Form):
     item = forms.ModelChoiceField(queryset = [])
@@ -286,4 +286,24 @@ class ItemChooseForm(forms.Form):
                 Submit("Continue", "Continue")
             )
         )
+
+class deleteForm( forms.Form):
+    CHOICES= (
+        (True, "Yes"),
+        (False, "No"),
+    )
+    choice  = forms.ChoiceField(choices= CHOICES)
+
+    def __init__(self, *args, **kwargs):
+        super(deleteForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = "form-horizontal"
+        self.helper.layout = Layout(
+            Fieldset('Comfirm ?', 'choice'),
+            FormActions(
+                Submit("Continue", "Continue")
+            )
+        )
+
 

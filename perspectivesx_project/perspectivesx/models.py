@@ -154,14 +154,14 @@ class LearnerSubmissionItem(models.Model):
 
 class CuratedItem(models.Model):
     item = models.ForeignKey(LearnerSubmissionItem)
-    score = models.IntegerField()
+    comment = models.CharField(max_length=5000, default = "No Comment")
     curator = models.ForeignKey(User)
 
     def __unicode__(self):
         return " {}. Curated by {}".format(self.item, self.curator)
 
     class Meta:
-        ordering = ['curator', 'item', 'score']
+        ordering = ['curator', 'item', 'comment']
         unique_together = ('item','curator')
 
 

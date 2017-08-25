@@ -24,7 +24,8 @@ class LearnerPerspectiveAdmin(admin.ModelAdmin):
     search_fields = ('selected_perspective', 'activity',)
 
 class CuratedItemAdmin(admin.ModelAdmin):
-    search_fields = ('item','curator')
+    search_fields = ('item','curator','id')
+    ist_display = ('item','curator','id')
 
 class SubmissionScoreAdmin(admin.ModelAdmin):
     search_fields = ('submission',)
@@ -34,5 +35,5 @@ admin.site.register(TemplateItem, TemplateItemAdmin)
 admin.site.register(Activity, ActivityAdmin)
 admin.site.register(LearnerSubmissionItem, LearnerSubmissionAdmin)
 admin.site.register(LearnerPerspectiveSubmission, LearnerPerspectiveAdmin)
-admin.site.register(CuratedItem, CuratedItemAdmin)
+admin.site.register(CuratedItem)
 admin.site.register(SubmissionScore , SubmissionScoreAdmin)
