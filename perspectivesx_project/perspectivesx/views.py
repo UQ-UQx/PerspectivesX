@@ -315,17 +315,23 @@ def delete_submission_item(request,item_id):
         form = deleteForm(request.POST)
         if(form.is_valid()):
             choice = form.cleaned_data["choice"]
-            if(choice == True):
+            if(choice == "True"):
                 #retrieve score &activity associated with submission
                 score = SubmissionScore.objects.get(submission=item.learner_submission)
                 activity = Activity.objects.get(id = item.learner_submission.activity_id)
                 #retrive number of items associated with this  -1 (counting as if the item was already deleted
                 items = len(LearnerSubmissionItem.objects.filter(learner_submission = item.learner_submission))-1
                 #update participation grade
-                score.participation_grade = min(1,float(items/activity.minimum_contribution))*100
+                score.participation_grade = min(1,float(items)/activity.minimum_contribution)*100
+                #update total grade
+                score.total_grade = round((score.participation_grade * activity.contribution_score / 100) + \
+                                          (score.curation_grade * activity.curation_score / 100))
+                score.save(force_update=True)
                 #delete item
                 item.delete()
-        return index(request)
+                return delete_success(request,score.id)
+            else:
+                return index(request)
     else:
         form = deleteForm()
     return render(request, 'delete_item.html', {'form': form,'item':item})
@@ -344,20 +350,32 @@ def delete_curated_item(request,item_id):
         form = deleteForm(request.POST)
         if (form.is_valid()):
             choice = form.cleaned_data["choice"]
-            if (choice == True):
+            if (choice == "True"):
                 # retrieve score &activity associated with submission
                 score = SubmissionScore.objects.get(submission=item.item.learner_submission)
                 activity = Activity.objects.get(id=item.item.learner_submission.activity_id)
                 # retrive number of items associated with this  -1 (counting as if the item was already deleted
-                items = len(CuratedItem.objects.filter(item__in =LearnerSubmissionItem.objects.filter(learner_submission= item.item.learner_submission_id))) - 1
+                items = len(CuratedItem.objects.filter(item__in =LearnerSubmissionItem.objects.filter(learner_submission= item.item.learner_submission_id)))-1
+                print(items)
                 # update participation grade
-                score.curation_grade = min(1, float(items / activity.minimum_curation)) * 100
+                score.curation_grade = min(1, float(items) / activity.minimum_curation) * 100
+                #update total grade
+                score.total_grade = round((score.participation_grade * activity.contribution_score / 100) + \
+                                    (score.curation_grade * activity.curation_score / 100))
+
+                score.save(force_update=True)
                 # delete item
                 item.delete()
-        return index(request)
+                return  delete_success(request,score.id)
+            else:
+                return index(request)
     else:
         form = deleteForm()
     return render(request, 'delete_item.html', {'form': form, 'item': item.item})
+
+def delete_success(request,updated_score):
+    score = SubmissionScore.objects.get(id=updated_score);
+    return render(request,"delete_success.html",{"score":score})
 
 def choose_curate_item(request, activity_name_slug, curator, all=False):
     activity = Activity.objects.get(slug=activity_name_slug)
