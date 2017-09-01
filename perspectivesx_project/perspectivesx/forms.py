@@ -102,6 +102,28 @@ class LearnerSubmissionItemForm(forms.ModelForm):
         model = LearnerSubmissionItem
         fields = ('item','position','learner_submission')
 
+class AddLearnerSubmissionItemForm(forms.ModelForm):
+    # Item stores the learner's contribution (entry) for this Item
+    item = forms.CharField(label="")
+    # Position stores the position of the item (index of the contribution)
+    position = forms.IntegerField(widget=forms.HiddenInput, required=False)
+    # learner_submission maps the item to the relevant learner submission
+    learner_submission = forms.ModelChoiceField(queryset=LearnerPerspectiveSubmission.objects.all(),
+                                                widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(AddLearnerSubmissionItemForm, self).__init__(*args, **kwargs)
+        # Define form helper
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Fieldset('Enter Item', 'item', 'position', 'learner_submission'),  FormActions(
+                Submit('Submit', 'Submit')
+            ))
+
+    class Meta:
+        model = LearnerSubmissionItem
+        fields = ('item', 'position', 'learner_submission')
 
 class LearnerForm(forms.ModelForm):
     #perspective_selection stores the perspective choosen by the learner
@@ -305,5 +327,6 @@ class deleteForm( forms.Form):
                 Submit("Continue", "Continue")
             )
         )
+
 
 

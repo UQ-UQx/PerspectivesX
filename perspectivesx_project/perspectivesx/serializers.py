@@ -27,8 +27,11 @@ class LearnerSubmissionItemSerializer(serializers.ModelSerializer):
     description = serializers.CharField(source = "__unicode__")
     class Meta:
         model = LearnerSubmissionItem
-        fields = '__all__'
+        fields = "__all__"
         read_only_fields = ('description',)
+    def create(self,validated_data):
+         obj = LearnerSubmissionItem.objects.create(item = validated_data["item"],position = validated_data["position"],learner_submission = validated_data["learner_submission"])
+         return obj;
 
 
 class CuratedItemSerializer(serializers.ModelSerializer):
