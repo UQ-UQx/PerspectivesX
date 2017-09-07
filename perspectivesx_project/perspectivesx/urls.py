@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from .views import add_activity, index, student_submission, create_template, curate_item, LTIindex, LTInot_authorized, \
     UserSubmissionItemList, UserCuratedItemList, PerspectiveList, display_perspective_items, ActivityList, \
-    delete_submission_item, delete_curated_item, add_submission_item
+    delete_submission_item, delete_curated_item, add_submission_item,GetSubmissionScore
 
 urlpatterns = [
     url(r'^add_activity/$', add_activity, name='add_activity'),
@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'delete_submission_item/(?P<item_id>\d+)/$', delete_submission_item, name="delete item"),
     url(r'delete_curated_item/(?P<item_id>\d+)/$', delete_curated_item, name="delete curated item"),
     url(r'add_submission_item/(?P<activity_id>\d+)/(?P<perspective_id>\d+)/(?P<position>\d+)/(?P<item>[\w\ ]+)/$', add_submission_item,
-        name="add submission item")]
+        name="add submission item"),
+    url(r'GetSubmissionScore/(?P<submission>\d+)/$',GetSubmissionScore.as_view(), name = "get_submission"),]

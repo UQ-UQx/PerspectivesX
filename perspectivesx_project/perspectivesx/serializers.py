@@ -42,4 +42,4 @@ class CuratedItemSerializer(serializers.ModelSerializer):
 class SubmissionScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionScore
-        fields= '__all__'
+        fields= ('participation_grade','curation_grade','total_grade')

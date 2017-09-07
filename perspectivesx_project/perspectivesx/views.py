@@ -205,16 +205,15 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
                     curation_score = min(1, float(CuratedItem.objects.filter(
                         curator=user).filter(
                         item__in=LearnerSubmissionItem.objects.filter(
-                            learner_submission=LearnerPerspectiveSubmission.objects.filter(
+                            learner_submission__in=LearnerPerspectiveSubmission.objects.filter(
                                 activity=activity))).count()) / activity.minimum_curation) * 100
 
                     total_score = (participation_score * activity.contribution_score / 100) + \
                                   (curation_score * activity.curation_score / 100)
 
-                    score = SubmissionScore.objects.get_or_create(submission=submission)[0]
+                    score = SubmissionScore.objects.get(submission=submission)[0]
                     score.participation_grade = participation_score
                     score.curation_grade = curation_score
-                    score.total_grade = total_score
                     score.save()
 
                     return index(request)
@@ -536,6 +535,7 @@ class LearnerSubmissionViewSet(viewsets.ModelViewSet):
 
 
 class LearnerSubmissionItemViewSet(viewsets.ModelViewSet):
+
     queryset = LearnerSubmissionItem.objects.all()
     serializer_class = LearnerSubmissionItemSerializer
 
@@ -601,3 +601,9 @@ class ActivityList(generics.ListAPIView):
 
     def get_queryset(self):
         return Activity.objects.all()
+
+class GetSubmissionScore(generics.ListAPIView):
+    serializer_class = SubmissionScoreSerializer
+
+    def get_queryset(self):
+        return SubmissionScore.objects.filter(submission=  self.kwargs['submission']);

@@ -124,6 +124,13 @@ class LearnerPerspectiveSubmission(models.Model):
     def __unicode__(self):
         return "{} Submission from {}".format(self.activity.title, self.created_by.username)
 
+    def save(self,*args,**kwargs):
+        super(LearnerPerspectiveSubmission,self).save(*args,**kwargs)
+        #create a new SubmissionScore object if it doesn't already exist
+        score = SubmissionScore.objects.get_or_create(submission = self);
+        score.save();
+
+
     class Meta:
         ordering = ["activity","created_by"]
         verbose_name_plural = "Learner Submissions"
@@ -145,6 +152,16 @@ class LearnerSubmissionItem(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def save(self,*args,**kwargs):
+        #save instance
+        super(LearnerSubmissionItem,self).save(*args,**kwargs)
+        #update score related to submission &save
+        submission_score = min(1, float(LearnerSubmissionItem.objects.filter(
+            learner_submission=self.learner_submission).count()) / self.learner_submission.activity.minimum_contribution) * 100
+        score = SubmissionScore.objects.get(submission= self.learner_submission)
+        score.participation_grade = submission_score
+        score.save()
+
     def __unicode__(self):
         return "Item number {} at {}".format(self.position, self.learner_submission)
 
@@ -160,6 +177,18 @@ class CuratedItem(models.Model):
     def __unicode__(self):
         return " {}. Curated by {}".format(self.item, self.curator)
 
+    def save(self,*args,**kwargs):
+        super(CuratedItem,self).save()
+        #update submission score curation_score
+        curation_score = min(1, float(CuratedItem.objects.filter(
+            curator=self.curator).filter(
+            item__in=LearnerSubmissionItem.objects.filter(
+                learner_submission__in=LearnerPerspectiveSubmission.objects.filter(
+                    activity=self.item.learner_submission.activity))).count()) / self.item.learner_submission.activity.minimum_curation) * 100
+        score = SubmissionScore.objects.get(submission=self.item.learner_submission)
+        score.curation_grade = curation_score
+        score.save()
+
     class Meta:
         ordering = ['curator', 'item', 'comment']
         unique_together = ('item','curator')
@@ -167,9 +196,14 @@ class CuratedItem(models.Model):
 
 class SubmissionScore(models.Model):
     submission = models.OneToOneField(LearnerPerspectiveSubmission)
-    participation_grade = models.IntegerField()
-    curation_grade = models.IntegerField()
+    participation_grade = models.IntegerField(default = 0)
+    curation_grade = models.IntegerField(default = 0)
     total_grade = models.IntegerField()
+
+    def save(self,*args,**kwargs):
+        activity = Activity.objects.get(id = self.submission.activity_id)
+        self.total_grade = ((self.participation_grade*activity.contribution_score)/100)+((self.curation_grade*activity.curation_score)/100)
+        super(SubmissionScore,self).save(*args,**kwargs)
 
     def __unicode__(self):
         return "{} \n Grades: \n Contribution: {}\n Curation: {} \n Total: {} \n".format(

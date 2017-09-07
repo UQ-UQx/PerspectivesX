@@ -17,8 +17,35 @@ class ItemComponent extends React.Component {
         $.ajax({
             url: "/api/LearnerSubmissionItem/" + this.state.item.id+"/",
             datatype: 'json',
+            contentType:'application/json; charset=utf-8',
             type: "DELETE",
             cache: false,
+            success:function(){
+               $.ajax({
+                    url: "/api/LearnerPerspectiveSubmission/"+this.state.item.learner_submission+"/",
+                    datatype: 'json',
+                    contentType:'application/json; charset=utf-8',
+                    type:"GET",
+                    cache: false,
+                    success: function (data) {
+                        $.ajax({
+                            url: "/perspectivesX/GetSubmissionScore/"+data.id+"/",
+                            datatype: 'json',
+                            contentType:'application/json; charset=utf-8',
+                            type:"GET",
+                            cache: false,
+                            success: function (data) {
+                                var object = data['0'];
+                                alert("Submission updated ! \n" +
+                                    " Your new score is: \n" +
+                                    "curation grade: "+ object['curation_grade']+"\n"+
+                                    "participation grade: "+object['participation_grade']+"\n"+
+                                    "total grade: "+ object['total_grade'], 3000);
+                            }.bind(this)
+                        });
+                    }.bind(this)
+                });
+            }.bind(this)
         });
     }
 
@@ -55,6 +82,7 @@ class AddItemForm extends React.Component {
           $.ajax({
             url: "/api/LearnerPerspectiveSubmission/",
             datatype: 'json',
+            contentType:'application/json; charset=utf-8',
             type:"GET",
             cache: false,
             success: function (data) {
@@ -80,7 +108,7 @@ class AddItemForm extends React.Component {
         var submissionArray = this.state.submission.filter(function(submission) {
             return (submission.activity == activity && submission.selected_perspective == perspective);
         });
-        var submission = submissionArray[0]
+        var submission = submissionArray[0];
 
 
         event.preventDefault();
@@ -94,15 +122,30 @@ class AddItemForm extends React.Component {
                 {
                 "learner_submission":""+submission.id,
                 "item":this.state.item,
-                "description": "asdadsad",
+                "description": "enter description",
                 "position":this.state.position
                 }),
             cache: false,
+            success:function(){
+                $.ajax({
+                    url: "/perspectivesX/GetSubmissionScore/"+submission.id+"/",
+                    datatype: 'json',
+                    contentType:'application/json',
+                    type:"GET",
+                    cache: false,
+                    success: function (data) {
+                        var object = data['0'];
+                        alert("Submission updated ! \n" +
+                            " Your new score is: \n" +
+                            "curation grade: "+ object['curation_grade']+"\n"+
+                            "participation grade: "+object['participation_grade']+"\n"+
+                            "total grade: "+ object['total_grade'],3000);
+                    }.bind(this)
+                });
+            }.bind(this)
 
 
         });
-        // window.location.href = "add_submission_item/" + this.state.activity + "/" + this.state.perspective +
-        //     "/" + this.state.position + "/" + this.state.item + "/";
 
     }
 
@@ -156,7 +199,7 @@ class PerspectiveComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {items: [], curated: [], perspective: props.perspective, activity: props.activity};
+        this.state = {items: [], curated: [], perspective: props.perspective, activity: props.activity, count: 0};
     }
 
     loadItemsFromServer() {
@@ -164,15 +207,19 @@ class PerspectiveComponent extends React.Component {
         $.ajax({
             url: "/perspectivesX/get_user_submission_items/" + this.state.activity + "/" + this.state.perspective + "/",
             datatype: 'json',
+            contentType:'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({items: data});
+                this.setState({count: this.state.items.length});
             }.bind(this)
         });
+
         var cur = this;
         $.ajax({
             url: "/perspectivesX/get_user_curated_items/" + this.state.activity + "/" + this.state.perspective + "/",
             datatype: 'json',
+            contentType:'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({curated: data});
@@ -217,16 +264,11 @@ class PerspectiveComponent extends React.Component {
                 className="btn btn-primary btn-md">Start Curating</a></li>;
         }
         var submissionButtonText = "Edit Submission"
-        var count = 0;
         if (itemNodes.length == 0) {
             itemNodes = <li>No submissions items for this perspective.<br/><br/></li>;
             submissionButtonText = "New Submission"
-        }else{
-            var count = itemNodes.length;
         }
-        if(this.state.activity == 7){
-            console.log(count);
-        }
+
         var url = "/perspectivesX/submission/" + this.props.activityName.replace(" ", "-").toLowerCase() + "/" + this.state.perspective + "/";
 
         return (
@@ -241,7 +283,7 @@ class PerspectiveComponent extends React.Component {
                                    className="btn btn-primary btn-md" style={{float: "left"}}>{submissionButtonText}
                                 </a>
                                 <AddItemForm activity={this.state.activity} perspective={this.state.perspective}
-                                             position= {count}/>
+                                             position= {this.state.count}/>
                             </ul>
                             <br/><br/>
                             <a href={"/perspectivesX/display_perspective_items/" + this.state.activity + "/" + this.state.perspective + "/"}
@@ -276,6 +318,7 @@ class PerspectiveGridComponent extends React.Component {
         $.ajax({
             url: "/perspectivesX/get_template_items/" + this.props.activity + "/",
             datatype: 'json',
+            contentType:'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({perspectives: data});
@@ -330,6 +373,7 @@ class ActivityGridComponent extends React.Component {
         $.ajax({
             url: "/perspectivesX/get_activities/",
             datatype: 'json',
+            contentType:'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({activities: data});
@@ -363,6 +407,9 @@ class ActivityGridComponent extends React.Component {
 
     }
 }
+
+
+
 ReactDOM.render(<ActivityGridComponent pollInterval={5000}/>, document.getElementById("container"));
 
 
