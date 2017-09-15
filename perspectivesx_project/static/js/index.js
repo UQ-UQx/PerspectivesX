@@ -147,6 +147,28 @@ class AddItemForm extends React.Component {
 
 
         event.preventDefault();
+        if(submission == undefined){
+            //Create new submission
+            $.ajax({
+                url: "/api/LearnerPerspectiveSubmission/",
+                datatype: 'json',
+                contentType:'application/json; charset=utf-8',
+                crossDomain: true,
+                type: "POST",
+                data: JSON.stringify(
+                    {
+                        "sharing":"Share with other learners",
+                        "selected_perspective": ""+perspective,
+                        "created_by": "1", //update this with user info !
+                        "activity": ""+activity.id
+                    }),
+                success:function(data){
+                    submission = data
+                }.bind(this),
+            });
+
+
+        }
         $.ajax({
             url: "/api/LearnerSubmissionItem/",
             datatype: 'json',
@@ -376,7 +398,7 @@ class PerspectiveComponent extends React.Component {
                                              position= {this.state.count}/>
                             </ul>
                             <br/><br/>
-                            <a href={"/perspectivesX/display_perspective_items/" + this.state.activity + "/" + this.state.perspective + "/"}
+                            <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
                                className="btn btn-primary btn-md">View all</a>
                         </div>
                     </div>

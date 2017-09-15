@@ -128,7 +128,7 @@ class LearnerPerspectiveSubmission(models.Model):
     def save(self, *args, **kwargs):
         super(LearnerPerspectiveSubmission, self).save(*args, **kwargs)
         # create a new SubmissionScore object if it doesn't already exist
-        score = SubmissionScore.objects.get_or_create(submission=self);
+        score,created = SubmissionScore.objects.get_or_create(submission=self);
         score.save();
 
     class Meta:

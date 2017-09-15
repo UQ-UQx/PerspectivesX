@@ -196,24 +196,24 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
                         item.learner_submission = submission
                         item.save()
 
-                    # create the Submission score object attached to this submission
-                    # participation score = number of submited contribution/activity.minimum_contribution
-                    # max score is 100% hence limit i/activity.minimum_contribution to 1
-                    participation_score = min(1, float(i) / activity.minimum_contribution) * 100
-                    # curation score = number of curated items on this activity by user/ activity.minimum_curation
-                    # replace "marcoLindley" with LTI user info
-                    curation_score = min(1, float(CuratedItem.objects.filter(
-                        curator=user).filter(
-                        item__in=LearnerSubmissionItem.objects.filter(
-                            learner_submission__in=LearnerPerspectiveSubmission.objects.filter(
-                                activity=activity))).count()) / activity.minimum_curation) * 100
+                    # # create the Submission score object attached to this submission
+                    # # participation score = number of submited contribution/activity.minimum_contribution
+                    # # max score is 100% hence limit i/activity.minimum_contribution to 1
+                    # participation_score = min(1, float(i) / activity.minimum_contribution) * 100
+                    # # curation score = number of curated items on this activity by user/ activity.minimum_curation
+                    # # replace "marcoLindley" with LTI user info
+                    # curation_score = min(1, float(CuratedItem.objects.filter(
+                    #     curator=user).filter(
+                    #     item__in=LearnerSubmissionItem.objects.filter(
+                    #         learner_submission__in=LearnerPerspectiveSubmission.objects.filter(
+                    #             activity=activity))).count()) / activity.minimum_curation) * 100
+                    #
+                    # total_score = (participation_score * activity.contribution_score / 100) + \
+                    #               (curation_score * activity.curation_score / 100)
 
-                    total_score = (participation_score * activity.contribution_score / 100) + \
-                                  (curation_score * activity.curation_score / 100)
-
-                    score = SubmissionScore.objects.get(submission=submission)[0]
-                    score.participation_grade = participation_score
-                    score.curation_grade = curation_score
+                    score = SubmissionScore.objects.get(submission=submission)
+                    # score.participation_grade = participation_score
+                    # score.curation_grade = curation_score
                     score.save()
 
                     return index(request)
