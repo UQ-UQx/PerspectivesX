@@ -303,100 +303,100 @@ def create_template(request):
     return render(request, 'create_template.html', context_dict)
 
 
-def add_submission_item(request, activity_id, perspective_id, position,item):
-    """
-
-    :param request:
-    :param activity_id: id of the activity for the submission
-    :param perspective_id: id of the perspective for the submission
-    :param position: int representing position in list
-    :param item: actual submission linked to the item
-    :return:
-    """
-    submission = LearnerPerspectiveSubmission.objects.get(selected_perspective_id=perspective_id,
-                                                          activity_id=activity_id, created_by=User.objects.get(username= "marcolindley"))
-    # manually add position and submission on form save
-    item = LearnerSubmissionItem.objects.create(item = item, position= int(position), learner_submission = submission)
-    item.save();
-
-    return index(request);
-
-
-
-def delete_submission_item(request, item_id):
-    """
-    Delete a submission item and update the submission score
-    :param request: django request
-    :param item_id: the id of the item to be deleter
-    """
-    # retrieve item
-    item = LearnerSubmissionItem.objects.get(id=item_id)
-    if request.method == "POST":
-        form = deleteForm(request.POST)
-        if (form.is_valid()):
-            choice = form.cleaned_data["choice"]
-            if (choice == "True"):
-                # retrieve score &activity associated with submission
-                score = SubmissionScore.objects.get(submission=item.learner_submission)
-                activity = Activity.objects.get(id=item.learner_submission.activity_id)
-                # retrive number of items associated with this  -1 (counting as if the item was already deleted
-                items = len(LearnerSubmissionItem.objects.filter(learner_submission=item.learner_submission)) - 1
-                # update participation grade
-                score.participation_grade = min(1, float(items) / activity.minimum_contribution) * 100
-                # update total grade
-                score.total_grade = round((score.participation_grade * activity.contribution_score / 100) + \
-                                          (score.curation_grade * activity.curation_score / 100))
-                score.save(force_update=True)
-                # delete item
-                item.delete()
-                return delete_success(request, score.id)
-            else:
-                return index(request)
-    else:
-        form = deleteForm()
-    return render(request, 'delete_item.html', {'form': form, 'item': item})
+# def add_submission_item(request, activity_id, perspective_id, position, item):
+#     """
+#
+#     :param request:
+#     :param activity_id: id of the activity for the submission
+#     :param perspective_id: id of the perspective for the submission
+#     :param position: int representing position in list
+#     :param item: actual submission linked to the item
+#     :return:
+#     """
+#     submission = LearnerPerspectiveSubmission.objects.get(selected_perspective_id=perspective_id,
+#                                                           activity_id=activity_id,
+#                                                           created_by=User.objects.get(username="marcolindley"))
+#     # manually add position and submission on form save
+#     item = LearnerSubmissionItem.objects.create(item=item, position=int(position), learner_submission=submission)
+#     item.save();
+#
+#     return index(request);
 
 
-def delete_curated_item(request, item_id):
-    """
-    Delete a curated item and update the submission score
-    :param request:
-    :param item_id:
-    :return:
-    """
-    item = CuratedItem.objects.get(item_id=item_id)
-    if request.method == "POST":
-        form = deleteForm(request.POST)
-        if (form.is_valid()):
-            choice = form.cleaned_data["choice"]
-            if (choice == "True"):
-                # retrieve score &activity associated with submission
-                score = SubmissionScore.objects.get(submission=item.item.learner_submission)
-                activity = Activity.objects.get(id=item.item.learner_submission.activity_id)
-                # retrive number of items associated with this  -1 (counting as if the item was already deleted
-                items = len(CuratedItem.objects.filter(item__in=LearnerSubmissionItem.objects.filter(
-                    learner_submission=item.item.learner_submission_id))) - 1
-                print(items)
-                # update participation grade
-                score.curation_grade = min(1, float(items) / activity.minimum_curation) * 100
-                # update total grade
-                score.total_grade = round((score.participation_grade * activity.contribution_score / 100) + \
-                                          (score.curation_grade * activity.curation_score / 100))
-
-                score.save(force_update=True)
-                # delete item
-                item.delete()
-                return delete_success(request, score.id)
-            else:
-                return index(request)
-    else:
-        form = deleteForm()
-    return render(request, 'delete_item.html', {'form': form, 'item': item.item})
+# def delete_submission_item(request, item_id):
+#     """
+#     Delete a submission item and update the submission score
+#     :param request: django request
+#     :param item_id: the id of the item to be deleter
+#     """
+#     # retrieve item
+#     item = LearnerSubmissionItem.objects.get(id=item_id)
+#     if request.method == "POST":
+#         form = deleteForm(request.POST)
+#         if (form.is_valid()):
+#             choice = form.cleaned_data["choice"]
+#             if (choice == "True"):
+#                 # retrieve score &activity associated with submission
+#                 score = SubmissionScore.objects.get(submission=item.learner_submission)
+#                 activity = Activity.objects.get(id=item.learner_submission.activity_id)
+#                 # retrive number of items associated with this  -1 (counting as if the item was already deleted
+#                 items = len(LearnerSubmissionItem.objects.filter(learner_submission=item.learner_submission)) - 1
+#                 # update participation grade
+#                 score.participation_grade = min(1, float(items) / activity.minimum_contribution) * 100
+#                 # update total grade
+#                 score.total_grade = round((score.participation_grade * activity.contribution_score / 100) + \
+#                                           (score.curation_grade * activity.curation_score / 100))
+#                 score.save(force_update=True)
+#                 # delete item
+#                 item.delete()
+#                 return delete_success(request, score.id)
+#             else:
+#                 return index(request)
+#     else:
+#         form = deleteForm()
+#     return render(request, 'delete_item.html', {'form': form, 'item': item})
 
 
-def delete_success(request, updated_score):
-    score = SubmissionScore.objects.get(id=updated_score);
-    return render(request, "delete_success.html", {"score": score})
+# def delete_curated_item(request, item_id):
+#     """
+#     Delete a curated item and update the submission score
+#     :param request:
+#     :param item_id:
+#     :return:
+#     """
+#     item = CuratedItem.objects.get(item_id=item_id)
+#     if request.method == "POST":
+#         form = deleteForm(request.POST)
+#         if (form.is_valid()):
+#             choice = form.cleaned_data["choice"]
+#             if (choice == "True"):
+#                 # retrieve score &activity associated with submission
+#                 score = SubmissionScore.objects.get(submission=item.item.learner_submission)
+#                 activity = Activity.objects.get(id=item.item.learner_submission.activity_id)
+#                 # retrive number of items associated with this  -1 (counting as if the item was already deleted
+#                 items = len(CuratedItem.objects.filter(item__in=LearnerSubmissionItem.objects.filter(
+#                     learner_submission=item.item.learner_submission_id))) - 1
+#                 print(items)
+#                 # update participation grade
+#                 score.curation_grade = min(1, float(items) / activity.minimum_curation) * 100
+#                 # update total grade
+#                 score.total_grade = round((score.participation_grade * activity.contribution_score / 100) + \
+#                                           (score.curation_grade * activity.curation_score / 100))
+#
+#                 score.save(force_update=True)
+#                 # delete item
+#                 item.delete()
+#                 return delete_success(request, score.id)
+#             else:
+#                 return index(request)
+#     else:
+#         form = deleteForm()
+#     return render(request, 'delete_item.html', {'form': form, 'item': item.item})
+
+
+# def delete_success(request, updated_score):
+#     score = SubmissionScore.objects.get(id=updated_score);
+#     return render(request, "delete_success.html", {"score": score})
 
 
 def choose_curate_item(request, activity_name_slug, curator, all=False):
@@ -468,24 +468,12 @@ def curate_item(request, activity_name_slug, item=None):
         context_dict['form'] = form
         if form.is_valid():
             # save the curated item
-            form.save(commit=True)
+            curated = form.save(commit=True)
             # update the grade of the SubmissionScore to reflect the new Curation score, update marcoLindley with lti user info
             score = SubmissionScore.objects.get(submission=
                                                 LearnerPerspectiveSubmission.objects.filter(created_by=curator).
-                                                get(activity=activity))
-
-            # retrieve all items for this activity
-            items = LearnerSubmissionItem.objects.filter(learner_submission=LearnerPerspectiveSubmission.objects.filter(
-                activity=activity))
-            # update curation score
-            curation_score = min(1, (float(CuratedItem.objects.filter(curator=curator).filter(
-                item__in=items).count()) / activity.minimum_curation)) * 100
-            # update total score
-            total_score = round((score.participation_grade * activity.contribution_score / 100) + \
-                                (curation_score * activity.curation_score / 100))
-            # update the score object
-            score.curation_grade = curation_score
-            score.total_grade = total_score
+                                                filter(activity=curated.item.learner_submission.activity_id).get(
+                                                    selected_perspective=curated.item.learner_submission.selected_perspective))
             # save
             score.save()
 
@@ -535,7 +523,6 @@ class LearnerSubmissionViewSet(viewsets.ModelViewSet):
 
 
 class LearnerSubmissionItemViewSet(viewsets.ModelViewSet):
-
     queryset = LearnerSubmissionItem.objects.all()
     serializer_class = LearnerSubmissionItemSerializer
 
@@ -569,7 +556,7 @@ class UserCuratedItemList(generics.ListAPIView):
     """
     API List View used to retrieve all users Curated items for a particular perspective
     """
-    serializer_class = LearnerSubmissionItemSerializer
+    serializer_class = CuratedItemSerializer
 
     def get_queryset(self):
         perspective = self.kwargs['perspective']
@@ -579,7 +566,7 @@ class UserCuratedItemList(generics.ListAPIView):
         perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=submissions)
         curated = CuratedItem.objects.filter(item__in=perspective_items).filter(
             curator=User.objects.get(username="marcolindley"))
-        return LearnerSubmissionItem.objects.filter(id__in=curated.values('item'))
+        return curated
 
 
 class PerspectiveList(generics.ListAPIView):
@@ -593,17 +580,20 @@ class PerspectiveList(generics.ListAPIView):
         return TemplateItem.objects.filter(template=activity.template)
 
 
-class ActivityList(generics.ListAPIView):
-    """
-    API list view used to retrieve all Activities
-    """
-    serializer_class = ActivitySerializer
-
-    def get_queryset(self):
-        return Activity.objects.all()
 
 class GetSubmissionScore(generics.ListAPIView):
     serializer_class = SubmissionScoreSerializer
 
     def get_queryset(self):
-        return SubmissionScore.objects.filter(submission=  self.kwargs['submission']);
+        return SubmissionScore.objects.filter(submission=self.kwargs['submission']);
+
+# class GetSubmissionFromCurated():
+#     """
+#     This API view retrieves the corresponding user submission from a curated item for that submission
+#     IE
+#         retrieve the submission that has the
+#     """
+#     serializer_class = LearnerSubmissionItemSerializer
+#
+#     def get_queryset(self):
+#         return LearnerSubmissionItem.

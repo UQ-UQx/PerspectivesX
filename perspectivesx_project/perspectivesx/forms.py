@@ -207,7 +207,7 @@ class TemplateCreatorForm(forms.ModelForm):
     #define main fields: template name & description
     name = forms.CharField( label= "Template Title:", initial = "\"Template Name\"")
     description = forms.CharField(label = "Descritpion: ", widget = forms.Textarea, initial = "Describe the activity Template")
-
+    icon = forms.ImageField()
     def __init__(self, *args, **kwargs):
         # call super.__init__()
         super(TemplateCreatorForm, self).__init__(*args, **kwargs)
@@ -219,7 +219,7 @@ class TemplateCreatorForm(forms.ModelForm):
         self.helper.label_class = 'control-label col-sm-2'
         # define form layout
         self.helper.layout = Layout(
-            Fieldset('','name','description',
+            Fieldset('','name','description','icon',
                     FormSetLayout('formset', header="Multi-Perspective Fieldset", item = "Perspective")),
             FormActions(
                 Submit("Save", "Save")
