@@ -1,6 +1,42 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 
+class IconComponent extends React.Component{
+    constructor(props){
+        super(props);
+        this.state = {template:props.template, url: " "}
+    }
+
+    loadTemplateFromServer() {
+        $.ajax({
+            url: "/api/Template/" + this.state.template + "/",
+            datatype: 'json',
+            contentType: 'application/json; charset=utf-8',
+            type: "GET",
+            cache: false,
+            success: function (data) {
+                this.setState({url: data["icon"]});
+            }.bind(this)
+        });
+    }
+    componentDidMount() {
+        this.loadTemplateFromServer();
+        // we have all submissions filter so that we keep the one relevant to this activity/perspective
+        console.log(this.state.url)
+    }
+    render(){
+        const imgStyle = {
+            maxHeight: '100px',
+            maxWidth: '100px',
+        };
+        return(
+            <div className="Icon">
+                <img src= {this.state.url} style = {imgStyle} />
+            </div>
+        )
+    }
+}
+
 class ItemComponent extends React.Component {
 
     //React component to display a single submission Item.
@@ -10,7 +46,6 @@ class ItemComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {item: props.item}
-
     }
 
     deleteItem(){
@@ -170,8 +205,63 @@ class CuratedItemComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {item: props.item}
+        this.state = {item: props.item,inner:{"id":-1,"description":" ","item":" ","position":0,"created_at":" ","learner_submission":-1}}
 
+    }
+
+    loadInnerItemFromServer(){
+        var cur = this;
+        $.ajax({
+            url: "/api/LearnerSubmissionItem/"+ this.state.item.item +"/",
+            datatype: 'json',
+            contentType:'application/json; charset=utf-8',
+            type:"GET",
+            cache: false,
+            success: function (data) {
+                this.setState({inner: data});
+            }.bind(this)
+        });
+    }
+
+    componentDidMount() {
+        this.loadInnerItemFromServer();
+
+    }
+
+    deleteItem(){
+        $.ajax({
+            url: "/api/CuratedItem/" + this.state.item.id+"/",
+            datatype: 'json',
+            contentType:'application/json; charset=utf-8',
+            type: "DELETE",
+            cache: false,
+            success:function(){
+               $.ajax({
+                    url: "/api/LearnerPerspectiveSubmission/"+this.state.inner.learner_submission+"/",
+                    datatype: 'json',
+                    contentType:'application/json; charset=utf-8',
+                    type:"GET",
+                    cache: false,
+                    success: function (data) {
+                        $.ajax({
+                            url: "/perspectivesX/GetSubmissionScore/"+data.id+"/",
+                            datatype: 'json',
+                            contentType:'application/json; charset=utf-8',
+                            type:"GET",
+                            cache: false,
+                            success: function (data) {
+                                var object = data['0'];
+                                alert("Submission updated ! \n" +
+                                    " Your new score is: \n" +
+                                    "curation grade: "+ object['curation_grade']+"\n"+
+                                    "participation grade: "+object['participation_grade']+"\n"+
+                                    "total grade: "+ object['total_grade']);
+                            }.bind(this)
+                        });
+                    }.bind(this)
+                });
+            }.bind(this)
+        });
     }
 
     render() {
@@ -180,13 +270,13 @@ class CuratedItemComponent extends React.Component {
             backgroundColor: 'lightgrey',
             marginBottom: '10px'
         };
-        var dateString = new Date(this.state.item.created_at);
+        var dateString = new Date(this.state.inner['created_at']);
         dateString = dateString.getDate() + "/" + dateString.getMonth() + "/" + dateString.getFullYear();
         return <li key={this.state.item.id} style={liStyle}>
-            <div>Item: {this.state.item.item}</div>
-            <div>Author:{this.state.item.description.split("from")[1]}</div>
+            <div>Item: {this.state.inner['item']}</div>
+            <div>Author:{this.state.inner['description'].split("from")[1]}</div>
             <div>
-                <p><a href={"/perspectivesX/delete_curated_item/" + this.state.item.id + "/"}>delete</a></p>
+                <p><button id = 'd1' onClick = {() => this.deleteItem()} className = "btn btn-primary btn-sm" >delete</button></p>
                 <p style={{textAlign: "right"}}>Submitted on: {dateString}</p>
             </div>
         </li>
@@ -205,7 +295,7 @@ class PerspectiveComponent extends React.Component {
     loadItemsFromServer() {
         var cur = this;
         $.ajax({
-            url: "/perspectivesX/get_user_submission_items/" + this.state.activity + "/" + this.state.perspective + "/",
+            url: "/perspectivesX/get_user_submission_items/" + this.state.activity.id + "/" + this.state.perspective + "/",
             datatype: 'json',
             contentType:'application/json; charset=utf-8',
             cache: false,
@@ -217,7 +307,7 @@ class PerspectiveComponent extends React.Component {
 
         var cur = this;
         $.ajax({
-            url: "/perspectivesX/get_user_curated_items/" + this.state.activity + "/" + this.state.perspective + "/",
+            url: "/perspectivesX/get_user_curated_items/" + this.state.activity.id + "/" + this.state.perspective + "/",
             datatype: 'json',
             contentType:'application/json; charset=utf-8',
             cache: false,
@@ -309,14 +399,14 @@ class PerspectiveComponent extends React.Component {
 class PerspectiveGridComponent extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {perspectives: []};
-
+        this.state = {perspectives: [], activity: props.activity};
+        console.log(this.state.activity);
     }
 
     loadPerspectivesFromServer() {
         var cur = this;
         $.ajax({
-            url: "/perspectivesX/get_template_items/" + this.props.activity + "/",
+            url: "/perspectivesX/get_template_items/" + this.state.activity.id + "/",
             datatype: 'json',
             contentType:'application/json; charset=utf-8',
             cache: false,
@@ -346,8 +436,9 @@ class PerspectiveGridComponent extends React.Component {
             return (
 
                 <div className="row">
-
-                    <h3>{this.props.name}</h3>
+                    <div>
+                        <h3>{this.state.activity.title}</h3> <IconComponent template = {this.state.activity.template}/>
+                    </div>
                     {perspectiveNodes}
                 </div>
             )
@@ -356,8 +447,8 @@ class PerspectiveGridComponent extends React.Component {
     }
 
     mapPerspectives(perspective) {
-        return <PerspectiveComponent activity={this.props.activity} perspective={perspective.id} name={perspective.name}
-                                     activityName={this.props.name} key={perspective.id} pollInterval={500}/>;
+        return <PerspectiveComponent activity={this.state.activity} perspective={perspective.id} name={perspective.name}
+                                     activityName={this.state.activity.title} key={perspective.id} pollInterval={500}/>;
     }
 }
 
@@ -371,7 +462,8 @@ class ActivityGridComponent extends React.Component {
     loadActivitiesFromServer() {
         var cur = this;
         $.ajax({
-            url: "/perspectivesX/get_activities/",
+            url: "/api/Activity/",
+            type: "GET",
             datatype: 'json',
             contentType:'application/json; charset=utf-8',
             cache: false,
@@ -394,7 +486,7 @@ class ActivityGridComponent extends React.Component {
                 marginRight: "15px"
             };
             var perspectiveGrids = this.state.activities.map(function (activity) {
-                return <PerspectiveGridComponent activity={activity.id} name={activity.title} key={activity.id} pollInterval={5000}/>
+                return <PerspectiveGridComponent activity={activity}  key={activity.id} pollInterval={5000}/>
 
             });
             return (
