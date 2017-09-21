@@ -1,10 +1,10 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-class IconComponent extends React.Component{
-    constructor(props){
+class IconComponent extends React.Component {
+    constructor(props) {
         super(props);
-        this.state = {template:props.template, url: " "}
+        this.state = {template: props.template, url: " "}
     }
 
     loadTemplateFromServer() {
@@ -19,19 +19,20 @@ class IconComponent extends React.Component{
             }.bind(this)
         });
     }
+
     componentDidMount() {
         this.loadTemplateFromServer();
         // we have all submissions filter so that we keep the one relevant to this activity/perspective
-        console.log(this.state.url)
     }
-    render(){
+
+    render() {
         const imgStyle = {
             maxHeight: '100px',
             maxWidth: '100px',
         };
-        return(
+        return (
             <div className="Icon">
-                <img src= {this.state.url} style = {imgStyle} />
+                <img src={this.state.url} style={imgStyle}/>
             </div>
         )
     }
@@ -48,34 +49,34 @@ class ItemComponent extends React.Component {
         this.state = {item: props.item}
     }
 
-    deleteItem(){
+    deleteItem() {
         $.ajax({
-            url: "/api/LearnerSubmissionItem/" + this.state.item.id+"/",
+            url: "/api/LearnerSubmissionItem/" + this.state.item.id + "/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
+            contentType: 'application/json; charset=utf-8',
             type: "DELETE",
             cache: false,
-            success:function(){
-               $.ajax({
-                    url: "/api/LearnerPerspectiveSubmission/"+this.state.item.learner_submission+"/",
+            success: function () {
+                $.ajax({
+                    url: "/api/LearnerPerspectiveSubmission/" + this.state.item.learner_submission + "/",
                     datatype: 'json',
-                    contentType:'application/json; charset=utf-8',
-                    type:"GET",
+                    contentType: 'application/json; charset=utf-8',
+                    type: "GET",
                     cache: false,
                     success: function (data) {
                         $.ajax({
-                            url: "/perspectivesX/GetSubmissionScore/"+data.id+"/",
+                            url: "/perspectivesX/GetSubmissionScore/" + data.id + "/",
                             datatype: 'json',
-                            contentType:'application/json; charset=utf-8',
-                            type:"GET",
+                            contentType: 'application/json; charset=utf-8',
+                            type: "GET",
                             cache: false,
                             success: function (data) {
                                 var object = data['0'];
                                 alert("Submission updated ! \n" +
                                     " Your new score is: \n" +
-                                    "curation grade: "+ object['curation_grade']+"\n"+
-                                    "participation grade: "+object['participation_grade']+"\n"+
-                                    "total grade: "+ object['total_grade'], 3000);
+                                    "curation grade: " + object['curation_grade'] + "\n" +
+                                    "participation grade: " + object['participation_grade'] + "\n" +
+                                    "total grade: " + object['total_grade'], 3000);
                             }.bind(this)
                         });
                     }.bind(this)
@@ -96,8 +97,11 @@ class ItemComponent extends React.Component {
             <div>Item: {this.state.item.item}</div>
             <div>Author:{this.state.item.description.split("from")[1]}</div>
             <div>
-                <p><button id = 'd1' onClick = {() => this.deleteItem()} className = "btn btn-primary btn-sm" >delete</button></p>
-                <p style={{textAlign: "right"}}>Submitted on: {dateString}</p>
+                <p>
+                    <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
+                </p>
+
+                <p style={{textAlign: "right"}}>Submitted on: {dateString}<br/>Curated by {this.state.item.number_of_times_curated} users</p>
             </div>
         </li>
     }
@@ -107,18 +111,24 @@ class ItemComponent extends React.Component {
 class AddItemForm extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {item: '',submission: [], activity: props.activity, perspective: props.perspective, position: props.position}
+        this.state = {
+            item: '',
+            submission: [],
+            activity: props.activity,
+            perspective: props.perspective,
+            position: props.position
+        }
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    loadSubmissionsFromServer(){
+    loadSubmissionsFromServer() {
         var cur = this;
-          $.ajax({
+        $.ajax({
             url: "/api/LearnerPerspectiveSubmission/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
-            type:"GET",
+            contentType: 'application/json; charset=utf-8',
+            type: "GET",
             cache: false,
             success: function (data) {
                 this.setState({submission: data});
@@ -129,7 +139,8 @@ class AddItemForm extends React.Component {
     //This will need to be updated with proper user info !
     componentDidMount() {
         this.loadSubmissionsFromServer();
-        // we have all submissions filter so that we keep the one relevant to this activity/perspective
+        setInterval(() => this.loadSubmissionsFromServer(),
+            this.props.pollInterval);
 
     }
 
@@ -140,69 +151,99 @@ class AddItemForm extends React.Component {
     handleSubmit(event) {
         var activity = this.state.activity;
         var perspective = this.state.perspective;
-        var submissionArray = this.state.submission.filter(function(submission) {
-            return (submission.activity == activity && submission.selected_perspective == perspective);
+
+        var submissionArray = this.state.submission.filter(function (submission) {
+            return (submission.activity == activity.id && submission.selected_perspective == perspective);
         });
+
         var submission = submissionArray[0];
 
 
         event.preventDefault();
-        if(submission == undefined){
+        if (submission == undefined) {
             //Create new submission
             $.ajax({
                 url: "/api/LearnerPerspectiveSubmission/",
                 datatype: 'json',
-                contentType:'application/json; charset=utf-8',
+                contentType: 'application/json; charset=utf-8',
+                type: "POST",
+                data: JSON.stringify(
+                    {
+                        "sharing": "Share with other learners",
+                        "selected_perspective": "" + perspective,
+                        "created_by": "1", //update this with user info !
+                        "activity": "" + activity.id
+                    }),
+                success: function (data) {
+                    submission = data;
+                    $.ajax({
+                        url: "/api/LearnerSubmissionItem/",
+                        datatype: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        crossDomain: true,
+                        type: "POST",
+                        data: JSON.stringify(
+                            {
+                                "learner_submission": "" + submission.id,
+                                "item": this.state.item,
+                                "description": "enter description",
+                                "position": this.state.position
+                            }),
+                        cache: false,
+                        success: function () {
+                            $.ajax({
+                                url: "/perspectivesX/GetSubmissionScore/" + submission.id + "/",
+                                datatype: 'json',
+                                contentType: 'application/json',
+                                type: "GET",
+                                cache: false,
+                                success: function (data) {
+                                    var object = data['0'];
+                                    alert("Submission updated ! \n" +
+                                        " Your new score is: \n" +
+                                        "curation grade: " + object['curation_grade'] + "\n" +
+                                        "participation grade: " + object['participation_grade'] + "\n" +
+                                        "total grade: " + object['total_grade'], 3000);
+                                }.bind(this)
+                            });
+                        }.bind(this)
+                    });
+                }.bind(this),
+            })
+        } else {
+            $.ajax({
+                url: "/api/LearnerSubmissionItem/",
+                datatype: 'json',
+                contentType: 'application/json; charset=utf-8',
                 crossDomain: true,
                 type: "POST",
                 data: JSON.stringify(
                     {
-                        "sharing":"Share with other learners",
-                        "selected_perspective": ""+perspective,
-                        "created_by": "1", //update this with user info !
-                        "activity": ""+activity.id
+                        "learner_submission": "" + submission.id,
+                        "item": this.state.item,
+                        "description": "enter description",
+                        "position": this.state.position
                     }),
-                success:function(data){
-                    submission = data
-                }.bind(this),
+                cache: false,
+                success: function () {
+                    $.ajax({
+                        url: "/perspectivesX/GetSubmissionScore/" + submission.id + "/",
+                        datatype: 'json',
+                        contentType: 'application/json',
+                        type: "GET",
+                        cache: false,
+                        success: function (data) {
+                            var object = data['0'];
+                            alert("Submission updated ! \n" +
+                                " Your new score is: \n" +
+                                "curation grade: " + object['curation_grade'] + "\n" +
+                                "participation grade: " + object['participation_grade'] + "\n" +
+                                "total grade: " + object['total_grade'], 3000);
+                        }.bind(this)
+                    });
+                }.bind(this)
             });
-
-
         }
-        $.ajax({
-            url: "/api/LearnerSubmissionItem/",
-            datatype: 'json',
-            contentType:'application/json; charset=utf-8',
-            crossDomain: true,
-            type: "POST",
-            data: JSON.stringify(
-                {
-                "learner_submission":""+submission.id,
-                "item":this.state.item,
-                "description": "enter description",
-                "position":this.state.position
-                }),
-            cache: false,
-            success:function(){
-                $.ajax({
-                    url: "/perspectivesX/GetSubmissionScore/"+submission.id+"/",
-                    datatype: 'json',
-                    contentType:'application/json',
-                    type:"GET",
-                    cache: false,
-                    success: function (data) {
-                        var object = data['0'];
-                        alert("Submission updated ! \n" +
-                            " Your new score is: \n" +
-                            "curation grade: "+ object['curation_grade']+"\n"+
-                            "participation grade: "+object['participation_grade']+"\n"+
-                            "total grade: "+ object['total_grade'],3000);
-                    }.bind(this)
-                });
-            }.bind(this)
-
-
-        });
 
     }
 
@@ -227,17 +268,27 @@ class CuratedItemComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {item: props.item,inner:{"id":-1,"description":" ","item":" ","position":0,"created_at":" ","learner_submission":-1}}
+        this.state = {
+            item: props.item,
+            inner: {
+                "id": -1,
+                "description": " ",
+                "item": " ",
+                "position": 0,
+                "created_at": " ",
+                "learner_submission": -1
+            }
+        }
 
     }
 
-    loadInnerItemFromServer(){
+    loadInnerItemFromServer() {
         var cur = this;
         $.ajax({
-            url: "/api/LearnerSubmissionItem/"+ this.state.item.item +"/",
+            url: "/api/LearnerSubmissionItem/" + this.state.item.item + "/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
-            type:"GET",
+            contentType: 'application/json; charset=utf-8',
+            type: "GET",
             cache: false,
             success: function (data) {
                 this.setState({inner: data});
@@ -247,37 +298,36 @@ class CuratedItemComponent extends React.Component {
 
     componentDidMount() {
         this.loadInnerItemFromServer();
-
     }
 
-    deleteItem(){
+    deleteItem() {
         $.ajax({
-            url: "/api/CuratedItem/" + this.state.item.id+"/",
+            url: "/api/CuratedItem/" + this.state.item.id + "/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
+            contentType: 'application/json; charset=utf-8',
             type: "DELETE",
             cache: false,
-            success:function(){
-               $.ajax({
-                    url: "/api/LearnerPerspectiveSubmission/"+this.state.inner.learner_submission+"/",
+            success: function () {
+                $.ajax({
+                    url: "/api/LearnerPerspectiveSubmission/" + this.state.inner.learner_submission + "/",
                     datatype: 'json',
-                    contentType:'application/json; charset=utf-8',
-                    type:"GET",
+                    contentType: 'application/json; charset=utf-8',
+                    type: "GET",
                     cache: false,
                     success: function (data) {
                         $.ajax({
-                            url: "/perspectivesX/GetSubmissionScore/"+data.id+"/",
+                            url: "/perspectivesX/GetSubmissionScore/" + data.id + "/",
                             datatype: 'json',
-                            contentType:'application/json; charset=utf-8',
-                            type:"GET",
+                            contentType: 'application/json; charset=utf-8',
+                            type: "GET",
                             cache: false,
                             success: function (data) {
                                 var object = data['0'];
                                 alert("Submission updated ! \n" +
                                     " Your new score is: \n" +
-                                    "curation grade: "+ object['curation_grade']+"\n"+
-                                    "participation grade: "+object['participation_grade']+"\n"+
-                                    "total grade: "+ object['total_grade']);
+                                    "curation grade: " + object['curation_grade'] + "\n" +
+                                    "participation grade: " + object['participation_grade'] + "\n" +
+                                    "total grade: " + object['total_grade']);
                             }.bind(this)
                         });
                     }.bind(this)
@@ -298,7 +348,9 @@ class CuratedItemComponent extends React.Component {
             <div>Item: {this.state.inner['item']}</div>
             <div>Author:{this.state.inner['description'].split("from")[1]}</div>
             <div>
-                <p><button id = 'd1' onClick = {() => this.deleteItem()} className = "btn btn-primary btn-sm" >delete</button></p>
+                <p>
+                    <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
+                </p>
                 <p style={{textAlign: "right"}}>Submitted on: {dateString}</p>
             </div>
         </li>
@@ -319,7 +371,7 @@ class PerspectiveComponent extends React.Component {
         $.ajax({
             url: "/perspectivesX/get_user_submission_items/" + this.state.activity.id + "/" + this.state.perspective + "/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
+            contentType: 'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({items: data});
@@ -331,7 +383,7 @@ class PerspectiveComponent extends React.Component {
         $.ajax({
             url: "/perspectivesX/get_user_curated_items/" + this.state.activity.id + "/" + this.state.perspective + "/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
+            contentType: 'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({curated: data});
@@ -359,20 +411,18 @@ class PerspectiveComponent extends React.Component {
         const columnStyle = {
             marginRight: "10px",
         };
-        var itemNodes = this.state.items.map(function (item) {
-            return <ItemComponent item={item} key={item.id}/>
+        var itemNodes = this.state.items.map(
+            (item) => this.mapItem(item)
+        );
 
-        });
+        var curatedNodes = this.state.curated.map(
+            (curated) => this.mapCuratedItem(curated)
+        );
 
-
-
-        var curatedNodes = this.state.curated.map(function (curated) {
-            return <CuratedItemComponent item={curated} key={curated.id}/>
-        })
         //if(curatedNodes.length>0 && itemNodes.length>0) {
         if (curatedNodes.length == 0) {
             curatedNodes = <li> No curated items. <br/><a
-                href={"/perspectivesX/display_perspective_items/" + this.state.activity + "/" + this.state.perspective + "/"}
+                href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
                 className="btn btn-primary btn-md">Start Curating</a></li>;
         }
         var submissionButtonText = "Edit Submission"
@@ -395,7 +445,7 @@ class PerspectiveComponent extends React.Component {
                                    className="btn btn-primary btn-md" style={{float: "left"}}>{submissionButtonText}
                                 </a>
                                 <AddItemForm activity={this.state.activity} perspective={this.state.perspective}
-                                             position= {this.state.count}/>
+                                             position={this.state.count} pollInterval={this.props.pollInterval}/>
                             </ul>
                             <br/><br/>
                             <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
@@ -415,6 +465,13 @@ class PerspectiveComponent extends React.Component {
         )
 
     }
+
+    mapCuratedItem(curated){
+        return <CuratedItemComponent item={curated} key={curated.id} pollInterval={this.props.pollInterval}/>
+    }
+    mapItem(item){
+        return <ItemComponent item={item} key={item.id} pollInterval={this.props.pollInterval}/>
+    }
 }
 
 
@@ -422,7 +479,6 @@ class PerspectiveGridComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {perspectives: [], activity: props.activity};
-        console.log(this.state.activity);
     }
 
     loadPerspectivesFromServer() {
@@ -430,7 +486,7 @@ class PerspectiveGridComponent extends React.Component {
         $.ajax({
             url: "/perspectivesX/get_template_items/" + this.state.activity.id + "/",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
+            contentType: 'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({perspectives: data});
@@ -440,8 +496,8 @@ class PerspectiveGridComponent extends React.Component {
 
     componentDidMount() {
         this.loadPerspectivesFromServer();
-        setInterval(()=>this.loadPerspectivesFromServer(),
-                     this.props.pollInterval);
+        setInterval(() => this.loadPerspectivesFromServer(),
+            this.props.pollInterval);
     }
 
     //take care  of no perspective case
@@ -459,7 +515,7 @@ class PerspectiveGridComponent extends React.Component {
 
                 <div className="row">
                     <div>
-                        <h3>{this.state.activity.title}</h3> <IconComponent template = {this.state.activity.template}/>
+                        <h3>{this.state.activity.title}</h3> <IconComponent template={this.state.activity.template}/>
                     </div>
                     {perspectiveNodes}
                 </div>
@@ -470,7 +526,8 @@ class PerspectiveGridComponent extends React.Component {
 
     mapPerspectives(perspective) {
         return <PerspectiveComponent activity={this.state.activity} perspective={perspective.id} name={perspective.name}
-                                     activityName={this.state.activity.title} key={perspective.id} pollInterval={500}/>;
+                                     activityName={this.state.activity.title} key={perspective.id}
+                                     pollInterval={this.props.pollInterval}/>;
     }
 }
 
@@ -479,6 +536,7 @@ class ActivityGridComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {activities: []};
+
     }
 
     loadActivitiesFromServer() {
@@ -487,7 +545,7 @@ class ActivityGridComponent extends React.Component {
             url: "/api/Activity/",
             type: "GET",
             datatype: 'json',
-            contentType:'application/json; charset=utf-8',
+            contentType: 'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
                 this.setState({activities: data});
@@ -507,10 +565,12 @@ class ActivityGridComponent extends React.Component {
                 marginLeft: "15px",
                 marginRight: "15px"
             };
-            var perspectiveGrids = this.state.activities.map(function (activity) {
-                return <PerspectiveGridComponent activity={activity}  key={activity.id} pollInterval={5000}/>
 
-            });
+            var perspectiveGrids = this.state.activities.map(
+                (activity) => this.mapPerspectiveGrid(activity)
+            );
+
+
             return (
 
                 <div className="container-fluid" style={containerStyle}>
@@ -520,11 +580,15 @@ class ActivityGridComponent extends React.Component {
         }
 
     }
+
+    mapPerspectiveGrid(activity){
+        return <PerspectiveGridComponent activity={activity} key={activity.id}
+                                                 pollInterval= {this.props.pollInterval}/>
+    }
 }
 
 
-
-ReactDOM.render(<ActivityGridComponent pollInterval={5000}/>, document.getElementById("container"));
+ReactDOM.render(<ActivityGridComponent pollInterval={1000}/>, document.getElementById("container"));
 
 
 

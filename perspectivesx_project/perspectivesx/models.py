@@ -152,6 +152,7 @@ class LearnerSubmissionItem(models.Model):
     learner_submission = models.ForeignKey(LearnerPerspectiveSubmission)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    number_of_times_curated = models.IntegerField(default = 0);
 
     def save(self, *args, **kwargs):
         # save instance
@@ -186,6 +187,9 @@ class CuratedItem(models.Model):
 
     def save(self, *args, **kwargs):
         super(CuratedItem, self).save()
+        #update the number of time the item has been curated
+        self.item.number_of_times_curated = self.item.number_of_times_curated+1
+        self.item.save()
         # update submission score
         score = SubmissionScore.objects.filter(submission__created_by=self.curator).filter(
             submission__activity=self.item.learner_submission.activity_id).get(
@@ -195,6 +199,8 @@ class CuratedItem(models.Model):
     def delete(self):
         # retrieve score for submission
         score = SubmissionScore.objects.get(submission=self.item.learner_submission)
+        self.item.number_of_times_curated = self.item.number_of_times_curated -1
+        self.item.save()
         # go ahead and delete item
         super(CuratedItem, self).delete()
         # update score
