@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = it's a secret
+SECRET_KEY = it's a secret !
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -49,7 +49,8 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
+    'perspectivesx_project.disablecsrf.DisableCSRF',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -116,14 +117,18 @@ STATICFILES_DIRS = (
     STATIC_PATH,
 )
 
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_URL ='/media/'
+
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 AUTHENTICATION_BACKENDS = [
+  'django.contrib.auth.backends.ModelBackend',
   'django_auth_lti.backends.LTIAuthBackend'
 ]
 
 LTI_OAUTH_CREDENTIALS = {
-    'xblocklti': '123456',
+    also a secret
 }
 
 WEBPACK_LOADER = {
