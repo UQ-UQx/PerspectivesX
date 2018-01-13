@@ -11,7 +11,7 @@ class Template(models.Model):
     '''
     name = models.CharField(max_length=5000, verbose_name="Template Name")
     description = models.TextField()
-    icon = models.ImageField(upload_to="icons", default = "")
+    #icon = models.ImageField(upload_to="icons", default = "")
 
     def __unicode__(self):
         return self.name

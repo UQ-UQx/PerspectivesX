@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load render_bundle from webpack_loader %}
+
 {% load staticfiles %}
 
 <html lang="en">
@@ -21,7 +21,7 @@
 
 </head>
 <body>
-
+<!--% load render_bundle from webpack_loader %-->
 <div class="container-fluid">
     <div class=jumbotron align="center">
         <h2>
@@ -29,7 +29,7 @@
         </h2>
     </div>
     <div class="row" id='container'>
-        {% render_bundle 'main' %}
+        <-- % render_bundle 'main' %-->
     </div>
 </div>
 

@@ -42,12 +42,12 @@ class ActivityForm(forms.ModelForm):
         (SUMMARIZE, SUMMARIZE),
         (VIEW, VIEW)
     )
-    kb_setting = forms.ChoiceField(choices =KB_SETTINGS_OPTIONS, label= "Kwowledge Base Setting:",
+    kb_setting = forms.ChoiceField(choices =KB_SETTINGS_OPTIONS, label= "Knowledge Base Setting:",
                                    widget=forms.RadioSelect)
     contribution_score = forms.IntegerField(label ="Contribution Score", initial = 50)
     curation_score = forms.IntegerField(label= "Curation Score", initial = 50)
-    minimum_contributions = forms.IntegerField(label= "Minimum Contributions", initial = 3 )
-    minimum_curations = forms.IntegerField(label = "Minimum Curated Response", initial = 3)
+    minimum_contributions = forms.IntegerField(label= "Minimum Number of Contributions", initial = 3 )
+    minimum_curations = forms.IntegerField(label = "Minimum Number of Curated Responses", initial = 3)
 
     def __init__(self, *args, **kwargs):
         super(ActivityForm, self).__init__(*args, **kwargs)
@@ -62,7 +62,7 @@ class ActivityForm(forms.ModelForm):
             "",'title','description','template',
             FormActions(
                 HTML("OR &emsp; "),
-                StrictButton("Create Custrom Template", name="create template",
+                StrictButton("Create Custom Template", name="create template",
                             value="create template",css_class= 'create-template')),
            'learner_contribution','learner_curation','kb_setting',
             PrependedText('contribution_score', '%', active=True),
@@ -209,7 +209,7 @@ class TemplateCreatorForm(forms.ModelForm):
     #define main fields: template name & description
     name = forms.CharField( label= "Template Title:", initial = "\"Template Name\"")
     description = forms.CharField(label = "Descritpion: ", widget = forms.Textarea, initial = "Describe the activity Template")
-    icon = forms.ImageField()
+    #icon = forms.ImageField()
     def __init__(self, *args, **kwargs):
         # call super.__init__()
         super(TemplateCreatorForm, self).__init__(*args, **kwargs)
@@ -220,7 +220,7 @@ class TemplateCreatorForm(forms.ModelForm):
         self.helper.field_class = 'col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
         # define form layout
-
+        '''
         self.helper.layout = Layout(
             Fieldset('','name','description','icon',
                     FormSetLayout('formset', header="Multi-Perspective Fieldset", item = "Perspective")),
@@ -228,7 +228,16 @@ class TemplateCreatorForm(forms.ModelForm):
                 Submit("Save", "Save")
             )
         )
-        
+        '''
+
+        self.helper.layout = Layout(
+            Fieldset('','name','description',
+                    FormSetLayout('formset', header="Multi-Perspective Fieldset", item = "Perspective")),
+            FormActions(
+                Submit("Save", "Save")
+            )
+        )
+
     class Meta:
         model = Template
         fields = ('name','description')
