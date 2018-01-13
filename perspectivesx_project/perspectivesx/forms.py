@@ -3,7 +3,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field, Row,Hidden
 from crispy_forms.bootstrap import FormActions,InlineRadios,PrependedText, InlineField,StrictButton
 from perspectivesx.models import Template, TemplateItem, Activity, LearnerPerspectiveSubmission,LearnerSubmissionItem,User,CuratedItem
-#from formsetlayout import Formset as FormSetLayout
+from perspectivesx.formsetlayout import Formset as FormSetLayout
 
 class ActivityForm(forms.ModelForm):
 
@@ -169,7 +169,7 @@ class LearnerForm(forms.ModelForm):
         self.helper.label_class = 'control-label col-sm-2'
 
         #define form layout
-        '''
+
         self.helper.layout = Layout(
             Fieldset('Submission',
                InlineRadios('selected_perspective'),FormSetLayout('formset',header = "Perspective Contribution:"),InlineRadios('sharing'),
@@ -179,7 +179,7 @@ class LearnerForm(forms.ModelForm):
                 Submit("Save","Save"),Submit('Submit', 'Submit'),
             )
         )
-        '''
+
     class Meta:
         model = LearnerPerspectiveSubmission
         fields = ('selected_perspective','sharing','activity','created_by')
@@ -220,7 +220,7 @@ class TemplateCreatorForm(forms.ModelForm):
         self.helper.field_class = 'col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
         # define form layout
-        '''
+
         self.helper.layout = Layout(
             Fieldset('','name','description','icon',
                     FormSetLayout('formset', header="Multi-Perspective Fieldset", item = "Perspective")),
@@ -228,7 +228,7 @@ class TemplateCreatorForm(forms.ModelForm):
                 Submit("Save", "Save")
             )
         )
-        '''
+        
     class Meta:
         model = Template
         fields = ('name','description')
