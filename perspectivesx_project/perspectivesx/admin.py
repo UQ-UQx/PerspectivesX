@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import Template, TemplateItem, Activity, LearnerSubmissionItem, LearnerPerspectiveSubmission, CuratedItem, SubmissionScore
+from perspectivesx.models import Template, TemplateItem, Activity, LearnerSubmissionItem, LearnerPerspectiveSubmission, CuratedItem, SubmissionScore
 
 # Register your models here.
 class TemplateAdmin(admin.ModelAdmin):

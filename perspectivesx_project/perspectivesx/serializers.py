@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from models import *
+from perspectivesx.models import *
 
 class TemplateSerializer(serializers.ModelSerializer):
 

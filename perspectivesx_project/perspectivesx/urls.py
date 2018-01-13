@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from .views import add_activity, index, student_submission, create_template, curate_item, LTIindex, LTInot_authorized, \
+from perspectivesx.views import add_activity, index, student_submission, create_template, curate_item, LTIindex, LTInot_authorized, \
     UserSubmissionItemList, UserCuratedItemList, PerspectiveList, display_perspective_items, \
     GetSubmissionScore
 

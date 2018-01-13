@@ -1,15 +1,15 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
-from forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, TemplateCreatorForm, TemplateItemForm, \
+from perspectivesx.forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, TemplateCreatorForm, TemplateItemForm, \
     ItemCuratorForm, ItemChooseForm, deleteForm, AddLearnerSubmissionItemForm
 from functools import partial, wraps
 from django.forms import modelformset_factory, formset_factory
-from models import Activity, Template, TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission, User
+from perspectivesx.models import Activity, Template, TemplateItem, LearnerSubmissionItem, LearnerPerspectiveSubmission, User
 from rest_framework import viewsets, generics
 from .serializers import *
 from random import randint
 from django.views.decorators.csrf import csrf_exempt
-from django_auth_lti.decorators import lti_role_required
+#from django_auth_lti.decorators import lti_role_required
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 # import pdb; pdb.set_trace()
@@ -31,15 +31,18 @@ def index(request):
 
 @csrf_exempt
 @xframe_options_exempt
-@lti_role_required(['Instructor', 'Student'], redirect_url='/perspectivesX/not_authorized/')
+#@lti_role_required(['Instructor', 'Student'], redirect_url='/perspectivesX/not_authorized/')
 def LTIindex(request):
-    print "resource_link_id", request.LTI.get('resource_link_id')
-    print request.LTI
-    print request.user
+    #print "resource_link_id", request.LTI.get('resource_link_id')
+    #print request.LTI
+    #print request.user
+    '''
     if request.LTI.get('resource_link_id') is not None:
         msg = "Resource Link ID!" + request.LTI.get('resource_link_id')
     else:
         msg = "No Resource Link is set"
+    '''
+    msg = "Test"
     return HttpResponse(msg)
 
 
@@ -60,7 +63,7 @@ def add_activity(request):
             form.save(commit=True)
             return index(request)
         else:
-            print form.errors
+            print(form.errors)
     else:
         form = ActivityForm()
 
@@ -89,7 +92,7 @@ def choose_perspective(request, activity_name_slug, user, all=False):
             item = form.cleaned_data['item']
             return HttpResponseRedirect('/perspectivesX/submission/{}/{}/'.format(activity_name_slug, item.id))
         else:
-            print form.errors
+            print(form.errors)
     else:
         form = ItemChooseForm(queryset=queryset, item="perspective to submit")
 
@@ -221,7 +224,7 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
                 else:
                     # Something went wrong when validating the formset remove the submission
                     submission.delete()
-                    print formset.errors
+                    print(formset.errors)
                     input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm,
                                                           extra=extra)
                     formset = input_form_set(queryset=pre_existing_answers)
@@ -232,7 +235,7 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
 
                 formset = input_form_set(request.POST, queryset=pre_existing_answers)
                 context_dict['formset'] = formset
-                print form.errors
+                print(form.errors)
 
     else:
         context_dict['form'] = LearnerForm(perspective=perspective, activity=activity, user=user.username,
@@ -289,9 +292,9 @@ def create_template(request):
                 else:
                     # Something went wrong when validating the formset remove the template
                     template.delete()
-                    print formset.errors
+                    print(formset.errors)
             else:
-                print form.errors
+                print(form.errors)
     else:
         form = TemplateCreatorForm()
         input_form_set = modelformset_factory(TemplateItem, form=TemplateItemForm, extra=extra)
@@ -427,7 +430,7 @@ def choose_curate_item(request, activity_name_slug, curator, all=False):
             item = form.cleaned_data['item']
             return HttpResponseRedirect('/perspectivesX/curate/{}/{}/'.format(activity_name_slug, item.id))
         else:
-            print form.errors
+            print(form.errors)
     else:
         form = ItemChooseForm(queryset=queryset, item="item to curate")
 
@@ -479,7 +482,7 @@ def curate_item(request, activity_name_slug, item=None):
 
             return index(request)
         else:
-            print form.errors
+            print(form.errors)
     else:
         # replace marcolindley with LTI user info
         form = ItemCuratorForm(curator=curator, item=item)
