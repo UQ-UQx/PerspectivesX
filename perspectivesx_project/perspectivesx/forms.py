@@ -7,7 +7,6 @@ from perspectivesx.formsetlayout import Formset as FormSetLayout
 
 class ActivityForm(forms.ModelForm):
 
-
     title = forms.CharField(max_length = 5000, label= "Title:")
     description = forms.CharField(label = "Decription:", widget= forms.Textarea)
     template = forms.ModelChoiceField(queryset = Template.objects.all() ,label= "Choose activity template:")
@@ -69,11 +68,9 @@ class ActivityForm(forms.ModelForm):
             PrependedText('curation_score','%',active= True),'minimum_contributions','minimum_curations'
              ),
             FormActions(
-                Submit('Add Activity', 'Add Activity')
+                Submit('Save', 'Save')
             )
         )
-
-
 
     class Meta:
         #associate activity Form with an Activity
