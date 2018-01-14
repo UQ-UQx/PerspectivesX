@@ -62,9 +62,9 @@ class Activity(models.Model):
     slug = models.SlugField()
     template = models.ForeignKey(Template)
 
-    SELECTED = 'Learner Selected'
-    RANDOM = 'Randomly Assigned'
-    ALL = 'Learner Completes All Perspectives'
+    SELECTED = 'Allow learners to choose a perspective'
+    RANDOM = 'Randomly assign a perspective for learner'
+    ALL = 'Allow Learners to contribute to all perspectives'
     PERSPECTIVE_SELECTION_OPTIONS = (
         (SELECTED, SELECTED),
         (RANDOM, RANDOM),

@@ -19,7 +19,7 @@ class ActivityForm(forms.ModelForm):
         (RANDOM, RANDOM),
         (ALL, ALL)
     )
-    learner_contribution = forms.ChoiceField(choices = PERSPECTIVE_SELECTION_OPTIONS, label= "Learner Contribution:",
+    perspective_selection = forms.ChoiceField(choices = PERSPECTIVE_SELECTION_OPTIONS, label= "Learner Contribution:",
                                              widget= forms.RadioSelect)
 
     SELECTED = 'Allow learners to choose a perspective to curate'
@@ -30,7 +30,7 @@ class ActivityForm(forms.ModelForm):
         (RANDOM, RANDOM),
         (ALL, ALL)
     )
-    learner_curation = forms.ChoiceField(choices=PERSPECTIVE_CURATION_OPTIONS, label= "Learner Curation:",
+    enable_curation = forms.ChoiceField(choices=PERSPECTIVE_CURATION_OPTIONS, label= "Learner Curation:",
                                          widget= forms.RadioSelect)
 
     ENABLE = 'Enable Search'
@@ -50,6 +50,11 @@ class ActivityForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ActivityForm, self).__init__(*args, **kwargs)
+        activity_id = "-"
+        if kwargs['instance']:
+            activity = kwargs['instance']
+            activity_id = activity.id
+            #print(activity_id)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_action = '/perspectivesX/add_activity/'
@@ -57,13 +62,14 @@ class ActivityForm(forms.ModelForm):
         self.helper.field_class ='col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
         self.helper.layout = Layout(
+            HTML('<div class="form-group"><label class="control-label control-label col-sm-2">Activity ID:</label><div class="controls col-sm-10">' + str(activity_id) + '</div></div>'),
             Fieldset(
             "",'title','description','template',
             FormActions(
                 HTML("OR &emsp; "),
                 StrictButton("Create Custom Template", name="create template",
                             value="create template",css_class= 'create-template')),
-           'learner_contribution','learner_curation','kb_setting',
+           'perspective_selection','enable_curation','kb_setting',
             PrependedText('contribution_score', '%', active=True),
             PrependedText('curation_score','%',active= True),'minimum_contributions','minimum_curations'
              ),
@@ -75,7 +81,7 @@ class ActivityForm(forms.ModelForm):
     class Meta:
         #associate activity Form with an Activity
         model = Activity
-        fields= ('title','description','template','learner_contribution','learner_curation','kb_setting',
+        fields= ('title','description','template','perspective_selection','enable_curation','kb_setting',
                  'contribution_score','curation_score','minimum_contributions','minimum_curations')
 
 class LearnerSubmissionItemForm(forms.ModelForm):

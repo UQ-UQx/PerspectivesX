@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from perspectivesx.forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, TemplateCreatorForm, TemplateItemForm, \
     ItemCuratorForm, ItemChooseForm, deleteForm, AddLearnerSubmissionItemForm
@@ -57,15 +57,21 @@ def add_activity(request):
     :param request:
     :return:
     """
-    if request.method == 'POST':
-        form = ActivityForm(request.POST)
-        if form.is_valid():
-            form.save(commit=True)
-            return index(request)
-        else:
-            print(form.errors)
+    activity_id = 1
+    activity = None
+    if (activity_id>0):
+        activity = get_object_or_404(Activity, pk=activity_id)
+
+    form = ActivityForm(request.POST or None, instance=activity)
+    if request.POST and form.is_valid():
+        form.save(commit=True)
+
+        # Save was successful, so redirect to another page
+        #redirect_url = reverse(article_save_success)
+        #return redirect(redirect_url)
+        return index(request)
     else:
-        form = ActivityForm()
+        print(form.errors)
 
     return render(request, 'add_activity.html', {'form': form})
 
