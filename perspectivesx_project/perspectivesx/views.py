@@ -42,9 +42,16 @@ def LTIindex(request):
     else:
         msg = "No Resource Link is set"
     '''
-    msg = "Test"
-    return HttpResponse(msg)
-
+    #msg = "Test"
+    #return HttpResponse(msg)
+    activity_id = 1
+    role = 'administrator'
+    display_view = "admin_view"
+    allowed_admin_roles = ['administrator', 'instructor']
+    if (activity_id<=0) and (role in allowed_admin_roles):
+        return add_activity(request)
+    else:
+        return index(request)
 
 def LTInot_authorized(request):
     return render(request, 'not_authorized.html', {'request': request})
