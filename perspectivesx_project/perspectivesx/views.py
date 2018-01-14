@@ -58,6 +58,9 @@ def add_activity(request):
     :return:
     """
     activity_id = 1
+    role = 'administrator'
+    display_view = "admin_view"
+    allowed_admin_roles = ['administrator', 'instructor']
     activity = None
     if (activity_id>0):
         activity = get_object_or_404(Activity, pk=activity_id)
@@ -73,7 +76,7 @@ def add_activity(request):
     else:
         print(form.errors)
 
-    return render(request, 'add_activity.html', {'form': form})
+    return render(request, 'add_activity.html', {'form': form, 'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
 
 
 def choose_perspective(request, activity_name_slug, user, all=False):

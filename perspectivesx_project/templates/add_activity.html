@@ -22,7 +22,8 @@
 				PerspectivesX: Add Activity
 			</h3>
         <div class="well well-lg">
-            {% crispy form %}
+          {% include "roleswitch.html" with role=role display_view=display_view allowed_admin_roles=allowed_admin_roles %}
+          {% crispy form %}
         </div>
         <script>
         $("button.btn.create-template").click(function(){
