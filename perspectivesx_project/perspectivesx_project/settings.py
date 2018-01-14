@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_auth_lti',
     'rest_framework',
     'rest_framework_swagger',
     'crispy_forms',
@@ -48,6 +49,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_auth_lti.middleware_patched.MultiLTILaunchAuthMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -110,6 +112,14 @@ STATICFILES_DIRS = [
 STATIC_URL = '/static/'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+AUTHENTICATION_BACKENDS = [
+  'django.contrib.auth.backends.ModelBackend',
+  'django_auth_lti.backends.LTIAuthBackend'
+]
+LTI_OAUTH_CREDENTIALS = {
+    'perspectivesxlti': '123456',
+}
 
 try:
     from local_settings import *

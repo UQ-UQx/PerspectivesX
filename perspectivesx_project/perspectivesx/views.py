@@ -9,7 +9,7 @@ from rest_framework import viewsets, generics
 from .serializers import *
 from random import randint
 from django.views.decorators.csrf import csrf_exempt
-#from django_auth_lti.decorators import lti_role_required
+from django_auth_lti.decorators import lti_role_required
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 # import pdb; pdb.set_trace()
@@ -26,16 +26,29 @@ def index(request):
     :param request:
     :return:
     """
-    return render(request, 'index.html', {'activities': Activity.objects.all()})
+    activity_id = 1
+    role = 'administrator'
+    display_view = "student_view"
+    allowed_admin_roles = ['administrator', 'instructor']
+    return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
+
+def LTItest(request):
+    """
+    Defines view for the home page.
+    At the moment just some text wiht link to add activity page
+    :param request:
+    :return:
+    """
+    return render(request, 'LTItest.html', {})
 
 
 @csrf_exempt
 @xframe_options_exempt
-#@lti_role_required(['Instructor', 'Student'], redirect_url='/perspectivesX/not_authorized/')
+@lti_role_required(['Instructor', 'Student', 'Administrator'], redirect_url='/perspectivesX/not_authorized/')
 def LTIindex(request):
-    #print "resource_link_id", request.LTI.get('resource_link_id')
-    #print request.LTI
-    #print request.user
+    print("resource_link_id", request.LTI.get('resource_link_id'))
+    print(request.LTI)
+    print(request.user)
     '''
     if request.LTI.get('resource_link_id') is not None:
         msg = "Resource Link ID!" + request.LTI.get('resource_link_id')
@@ -48,7 +61,7 @@ def LTIindex(request):
     role = 'administrator'
     display_view = "admin_view"
     allowed_admin_roles = ['administrator', 'instructor']
-    if (activity_id<=0) and (role in allowed_admin_roles):
+    if ((activity_id<=0) and (role in allowed_admin_roles)):
         return add_activity(request)
     else:
         return index(request)
