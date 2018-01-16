@@ -98,7 +98,11 @@ class LTIAuthMiddleware(object):
                     'tool_consumer_instance_url': request.POST.get('tool_consumer_instance_url', None),
                     'user_id': request.POST.get('user_id', None),
                     'user_image': request.POST.get('user_image', None),
+                    #todo: add all custom_ posted values to this lists
+                    'custom_activity_id': request.POST.get('custom_activity_id', None),
                 }
+                print("lti_launch")
+                print(lti_launch)
                 # If a custom role key is defined in project, merge into existing role list
                 if hasattr(settings, 'LTI_CUSTOM_ROLE_KEY'):
                     custom_roles = request.POST.get(settings.LTI_CUSTOM_ROLE_KEY, '').split(',')

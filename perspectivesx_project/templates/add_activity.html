@@ -19,10 +19,10 @@
   <body>
     <div class="container-fluid">
 			<h3>
-				PerspectivesX: Add Activity
+				PerspectivesX: Add/Edit Activity
 			</h3>
         <div class="well well-lg">
-          {% include "roleswitch.html" with role=role display_view=display_view allowed_admin_roles=allowed_admin_roles %}
+          {% include "roleswitch.html" with resource_link_id=resource_link_id role=role display_view=display_view allowed_admin_roles=allowed_admin_roles %}
           {% crispy form %}
         </div>
         <script>

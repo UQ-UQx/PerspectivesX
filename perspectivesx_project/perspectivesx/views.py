@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from perspectivesx.forms import ActivityForm, LearnerForm, LearnerSubmissionItemForm, TemplateCreatorForm, TemplateItemForm, \
     ItemCuratorForm, ItemChooseForm, deleteForm, AddLearnerSubmissionItemForm
@@ -27,9 +27,9 @@ def index(request):
     :return:
     """
     activity_id = 1
-    role = 'administrator'
+    role = 'Administrator'
     display_view = "student_view"
-    allowed_admin_roles = ['administrator', 'instructor']
+    allowed_admin_roles = ['Administrator', 'Instructor']
     return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
 
 def LTItest(request):
@@ -41,62 +41,77 @@ def LTItest(request):
     """
     return render(request, 'LTItest.html', {})
 
-
 @csrf_exempt
 @xframe_options_exempt
 @lti_role_required(['Instructor', 'Student', 'Administrator'], redirect_url='/perspectivesX/not_authorized/')
 def LTIindex(request):
-    print("resource_link_id", request.LTI.get('resource_link_id'))
-    print(request.LTI)
-    print(request.user)
-    '''
-    if request.LTI.get('resource_link_id') is not None:
-        msg = "Resource Link ID!" + request.LTI.get('resource_link_id')
-    else:
-        msg = "No Resource Link is set"
-    '''
-    #msg = "Test"
-    #return HttpResponse(msg)
-    activity_id = 1
-    role = 'administrator'
+    activity_id = int(request.LTI.get('custom_activity_id'))
+    role = request.LTI.get('roles')[0]
+
+    resource_link_id = request.LTI.get('resource_link_id')
+    request.session['perspectivesx_'+resource_link_id] =  request.LTI
+    request.session['perspectivesx_'+resource_link_id]['activity_id'] =  activity_id
     display_view = "admin_view"
-    allowed_admin_roles = ['administrator', 'instructor']
+    allowed_admin_roles = ['Administrator', 'Instructor']
     if ((activity_id<=0) and (role in allowed_admin_roles)):
-        return add_activity(request)
+        return redirect('add_activity', resource_link_id=resource_link_id)
+        #return add_activity(request,resource_link_id)
     else:
-        return index(request)
+        return redirect('studentview', resource_link_id=resource_link_id)
+        #return studentview(request,resource_link_id)
+
+def studentview(request,resource_link_id):
+    activity_id = 1
+    role = 'Administrator'
+    display_view = "student_view"
+    allowed_admin_roles = ['Administrator', 'Instructor']
+    return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles, 'resource_link_id':resource_link_id})
+
 
 def LTInot_authorized(request):
     return render(request, 'not_authorized.html', {'request': request})
 
-
-def add_activity(request):
+def add_activity(request,resource_link_id):
     """
     defines view for add activity page
     Shows the add activity form
     :param request:
     :return:
     """
-    activity_id = 1
-    role = 'administrator'
+    #activity_id = 1
+    LTI = request.session['perspectivesx_'+resource_link_id]
+    activity_id = LTI.get('activity_id')
+    print("activity id after redirect", activity_id)
+    print(request.POST)
+    role = LTI.get('roles')[0]
+    #print("role", role)
     display_view = "admin_view"
-    allowed_admin_roles = ['administrator', 'instructor']
+    allowed_admin_roles = ['Administrator', 'Instructor']
+
+    form = ActivityForm(request.POST or None, resource_link_id=resource_link_id)
+
     activity = None
     if (activity_id>0):
         activity = get_object_or_404(Activity, pk=activity_id)
+        form = ActivityForm(request.POST or None, instance=activity, resource_link_id=resource_link_id)
 
-    form = ActivityForm(request.POST or None, instance=activity)
     if request.POST and form.is_valid():
-        form.save(commit=True)
+        activity = form.save(commit=True)
+        request.session['perspectivesx_'+resource_link_id]['custom_activity_id']=str(activity.id)
+        request.session['perspectivesx_'+resource_link_id]['activity_id']=activity.id
+        #print("post save activity")
+        #print(request.session['perspectivesx_'+resource_link_id])
+
+        form = ActivityForm(request.POST or None, instance=activity, resource_link_id=resource_link_id)
 
         # Save was successful, so redirect to another page
         #redirect_url = reverse(article_save_success)
         #return redirect(redirect_url)
-        return index(request)
+        #return index(request, resource_link_id)
     else:
         print(form.errors)
 
-    return render(request, 'add_activity.html', {'form': form, 'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
+    return render(request, 'add_activity.html', {'form': form, 'role': role, 'resource_link_id': resource_link_id, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
 
 
 def choose_perspective(request, activity_name_slug, user, all=False):
@@ -141,13 +156,18 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
     activity = Activity.objects.get(slug=activity_name_slug)
     template = Template.objects.get(name=activity.template)
     # replace 'marcolindley' wiht LTI user info
-    user = User.objects.get(username='marcolindley')
+    user = User.objects.get(username='cuid:a0d05d435d1a7bbf1e90f99400750bc5')
     # Check wether perspective is set, if not either let the user select one or assign one randomly
     if (perspective == None):
         perspective_mode = activity.perspective_selection
+        '''
         SELECTED = 'Learner Selected'
         RANDOM = 'Randomly Assigned'
         ALL = 'Learner Completes All Perspectives'
+        '''
+        SELECTED = 'Allow learners to choose a perspective'
+        RANDOM = 'Randomly assign a perspective for learner'
+        ALL = 'Allow Learners to contribute to all perspectives'
 
         if perspective_mode == SELECTED:
             return choose_perspective(request, activity_name_slug, user)
@@ -185,6 +205,7 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
 
     # If we get a POST
     if request.method == "POST":
+        print('student submission posted')
         # check the action, if it contains "add new" we are adding a form to the formset.
         if (request.POST.keys().__contains__('action') and request.POST['action'].__contains__("Add new")):
             # increment extra
@@ -267,8 +288,10 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
                 print(form.errors)
 
     else:
+
         context_dict['form'] = LearnerForm(perspective=perspective, activity=activity, user=user.username,
                                            instance=instance)
+
         input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm, extra=extra)
         formset = input_form_set(queryset=pre_existing_answers)
         context_dict['formset'] = formset

@@ -39,6 +39,9 @@ class TemplateItem(models.Model):
     def __unicode__(self):
         return self.name
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         ordering = ["template", "position"]
         verbose_name_plural = "Template Items"

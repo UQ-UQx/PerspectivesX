@@ -49,15 +49,19 @@ class ActivityForm(forms.ModelForm):
     minimum_curations = forms.IntegerField(label = "Minimum Number of Curated Responses", initial = 3)
 
     def __init__(self, *args, **kwargs):
+        resource_link_id = "-"
+        if 'resource_link_id' in kwargs:
+            resource_link_id = kwargs.pop('resource_link_id')
         super(ActivityForm, self).__init__(*args, **kwargs)
         activity_id = "-"
-        if kwargs['instance']:
+        if 'instance' in kwargs:
             activity = kwargs['instance']
             activity_id = activity.id
             #print(activity_id)
+
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        self.helper.form_action = '/perspectivesX/add_activity/'
+        self.helper.form_action = '/perspectivesX/add_activity/'+resource_link_id+'/'
         self.helper.form_class = "form-horizontal"
         self.helper.field_class ='col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
@@ -86,7 +90,7 @@ class ActivityForm(forms.ModelForm):
 
 class LearnerSubmissionItemForm(forms.ModelForm):
     #Item stores the learner's contribution (entry) for this Item
-    item = forms.CharField(label ="")
+    item = forms.CharField(label="")
     #Position stores the position of the item (index of the contribution)
     position = forms.IntegerField(widget = forms.HiddenInput, required = False)
     #learner_submission maps the item to the relevant learner submission
@@ -171,12 +175,16 @@ class LearnerForm(forms.ModelForm):
         self.helper.field_class = 'col-sm-10'
         self.helper.label_class = 'control-label col-sm-2'
 
+        #get selected perspective title
+        selected_perspective = TemplateItem.objects.get(id = self.perspective).name
         #define form layout
 
         self.helper.layout = Layout(
-            Fieldset('Submission',
+
+            Fieldset('Submit Perspective Items:',
+               HTML("<strong>Selected Perspective:</strong> " + selected_perspective),
                InlineRadios('selected_perspective'),FormSetLayout('formset',header = "Perspective Contribution:"),InlineRadios('sharing'),
-                     'activity'
+                     'activity','created_by'
             ),
             FormActions(
                 Submit("Save","Save"),Submit('Submit', 'Submit'),
