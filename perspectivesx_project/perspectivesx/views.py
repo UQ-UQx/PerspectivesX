@@ -53,6 +53,7 @@ def LTIindex(request):
     request.session['perspectivesx_'+resource_link_id]['activity_id'] =  activity_id
     display_view = "admin_view"
     allowed_admin_roles = ['Administrator', 'Instructor']
+
     if ((activity_id<=0) and (role in allowed_admin_roles)):
         return redirect('add_activity', resource_link_id=resource_link_id)
         #return add_activity(request,resource_link_id)
@@ -61,12 +62,30 @@ def LTIindex(request):
         #return studentview(request,resource_link_id)
 
 def studentview(request,resource_link_id):
-    activity_id = 1
-    role = 'Administrator'
+
+    LTI = request.session['perspectivesx_'+resource_link_id]
+    activity_id = LTI.get('activity_id')
+    #print("activity id after redirect", activity_id)
+    #print(request.POST)
+    role = LTI.get('roles')[0]
+    #print("role", role)
     display_view = "student_view"
     allowed_admin_roles = ['Administrator', 'Instructor']
-    return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles, 'resource_link_id':resource_link_id})
 
+    #if student has made a perspectivesubmission display the grid_activity
+    #else display the submission form
+    current_user = request.user
+    user_id = current_user.id
+    username = current_user.username
+    #print(user_id)
+    learnersubmissions = LearnerPerspectiveSubmission.objects.filter(activity=activity_id,created_by=current_user.id)
+    #print(learnersubmissions)
+    if (len(learnersubmissions)>0):
+        #print("Display grid")
+        return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles, 'resource_link_id':resource_link_id, 'username': username, 'user_id':user_id, 'activity_id': activity_id})
+    else:
+        #print("display submission form")
+        return student_submission(request, resource_link_id, activity_id, extra=0, perspective=None)
 
 def LTInot_authorized(request):
     return render(request, 'not_authorized.html', {'request': request})
@@ -81,8 +100,8 @@ def add_activity(request,resource_link_id):
     #activity_id = 1
     LTI = request.session['perspectivesx_'+resource_link_id]
     activity_id = LTI.get('activity_id')
-    print("activity id after redirect", activity_id)
-    print(request.POST)
+    #print("activity id after redirect", activity_id)
+    #print(request.POST)
     role = LTI.get('roles')[0]
     #print("role", role)
     display_view = "admin_view"
@@ -114,8 +133,8 @@ def add_activity(request,resource_link_id):
     return render(request, 'add_activity.html', {'form': form, 'role': role, 'resource_link_id': resource_link_id, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
 
 
-def choose_perspective(request, activity_name_slug, user, all=False):
-    activity = Activity.objects.get(slug=activity_name_slug)
+def choose_perspective(request, resource_link_id, activity_id, user, all=False):
+    activity = Activity.objects.get(id=activity_id)
     if (all):
         # the user must choose a perspective that he hasn't alread submited
         # retrive Submission for this activity from the user
@@ -134,7 +153,7 @@ def choose_perspective(request, activity_name_slug, user, all=False):
         form = ItemChooseForm(request.POST, queryset=queryset, item="perspective to submit")
         if form.is_valid():
             item = form.cleaned_data['item']
-            return HttpResponseRedirect('/perspectivesX/submission/{}/{}/'.format(activity_name_slug, item.id))
+            return HttpResponseRedirect('/perspectivesX/submission/{}/{}/{}/'.format(resource_link_id,activity_id, item.id))
         else:
             print(form.errors)
     else:
@@ -143,7 +162,7 @@ def choose_perspective(request, activity_name_slug, user, all=False):
     return render(request, 'choose_item.html', {'form': form})
 
 
-def student_submission(request, activity_name_slug, extra=0, perspective=None):
+def student_submission(request, resource_link_id, activity_id, extra=0, perspective=None):
     """
     View for student submission page
     Displays the submission form in function of the undertaken activity
@@ -153,10 +172,12 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
     """
 
     # retrieve information from parameters
-    activity = Activity.objects.get(slug=activity_name_slug)
+    activity = Activity.objects.get(id=activity_id)
     template = Template.objects.get(name=activity.template)
     # replace 'marcolindley' wiht LTI user info
-    user = User.objects.get(username='cuid:a0d05d435d1a7bbf1e90f99400750bc5')
+    #user = User.objects.get(username='cuid:a0d05d435d1a7bbf1e90f99400750bc5')
+    user = request.user
+    user_id = user.id
     # Check wether perspective is set, if not either let the user select one or assign one randomly
     if (perspective == None):
         perspective_mode = activity.perspective_selection
@@ -170,10 +191,10 @@ def student_submission(request, activity_name_slug, extra=0, perspective=None):
         ALL = 'Allow Learners to contribute to all perspectives'
 
         if perspective_mode == SELECTED:
-            return choose_perspective(request, activity_name_slug, user)
+            return choose_perspective(request, resource_link_id, activity_id, user)
 
         if perspective_mode == ALL:
-            return choose_perspective(request, activity_name_slug, user, all=True)
+            return choose_perspective(request, activity_id, user, all=True)
 
         if perspective_mode == RANDOM:
             perspective_list = list(TemplateItem.objects.filter(
@@ -550,7 +571,7 @@ def display_perspective_items(request, activity, perspective):
     template_item = TemplateItem.objects.get(id=perspective)
     perspective_submissions = LearnerPerspectiveSubmission.objects.filter(activity=activity).filter(
         selected_perspective=perspective)
-    perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=perspective_submissions)
+    perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=perspective_submissions).order_by('-created_at')
 
     return render(request, 'perspective_display.html',
                   {'items': perspective_items, 'perspective': template_item,
@@ -601,10 +622,12 @@ class UserSubmissionItemList(generics.ListAPIView):
     def get_queryset(self):
         perspective = self.kwargs['perspective']
         activity = self.kwargs['activity']
+        username = self.kwargs['username']
         # !!! replace this with proper user info !!!
         submissions = LearnerPerspectiveSubmission.objects.filter(activity=activity).filter(
-            created_by=User.objects.get(username="marcolindley")).filter(selected_perspective=perspective)
-        return LearnerSubmissionItem.objects.filter(learner_submission_id__in=submissions)
+            created_by=User.objects.get(username=username)).filter(selected_perspective=perspective)
+
+        return LearnerSubmissionItem.objects.filter(learner_submission_id__in=submissions).order_by('-created_at')
 
 
 class UserCuratedItemList(generics.ListAPIView):
@@ -616,11 +639,12 @@ class UserCuratedItemList(generics.ListAPIView):
     def get_queryset(self):
         perspective = self.kwargs['perspective']
         activity = self.kwargs['activity']
+        username = self.kwargs['username']
         submissions = LearnerPerspectiveSubmission.objects.filter(activity=activity).filter(
             selected_perspective=perspective)
         perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=submissions)
         curated = CuratedItem.objects.filter(item__in=perspective_items).filter(
-            curator=User.objects.get(username="marcolindley"))
+            curator=User.objects.get(username=username))
         return curated
 
 

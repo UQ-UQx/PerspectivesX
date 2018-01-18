@@ -1,6 +1,9 @@
 /django_auth_lti
 /ims_lti_py
 
+.DS_Store
+node_modules/*
+
 # Ignore Mac DS_Store files
 *.DS_Store
 

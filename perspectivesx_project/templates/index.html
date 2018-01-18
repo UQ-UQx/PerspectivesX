@@ -18,10 +18,48 @@
     <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/bootstrap.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/scripts.js" %}"></script>
+    <script>
+    var activity_id={{activity_id}};
+    var username="{{username}}";
+    var user_id ="{{user_id}}";
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+    /*
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+    */
+    </script>
 
 </head>
 <body>
-<!--% load render_bundle from webpack_loader %-->
+{% load render_bundle from webpack_loader %}
 <div class="container-fluid">
     <div class=jumbotron align="center">
         <h2>
@@ -31,7 +69,7 @@
     <div class="row" id='container'>
       {% include "roleswitch.html" with resource_link_id=resource_link_id role=role display_view=display_view allowed_admin_roles=allowed_admin_roles %}
 
-        <!-- % render_bundle 'main' %-->
+      {% render_bundle 'main' %}
     </div>
 </div>
 

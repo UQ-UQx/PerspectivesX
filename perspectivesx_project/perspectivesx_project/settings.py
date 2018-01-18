@@ -41,7 +41,8 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'crispy_forms',
-    'perspectivesx'
+    'perspectivesx',
+    'webpack_loader'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -125,3 +126,18 @@ try:
     from local_settings import *
 except ImportError:
     pass
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'bundles/',
+        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+    }
+}
+
+'''
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
+'''

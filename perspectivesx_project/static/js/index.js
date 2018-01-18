@@ -56,6 +56,10 @@ class ItemComponent extends React.Component {
             contentType: 'application/json; charset=utf-8',
             type: "DELETE",
             cache: false,
+            beforeSend: function(xhr, settings) {
+              console.log("before send run", csrftoken)
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            },
             success: function () {
                 $.ajax({
                     url: "/api/LearnerPerspectiveSubmission/" + this.state.item.learner_submission + "/",
@@ -64,6 +68,8 @@ class ItemComponent extends React.Component {
                     type: "GET",
                     cache: false,
                     success: function (data) {
+                        this.props.submissionschanged();
+                        /*
                         $.ajax({
                             url: "/perspectivesX/GetSubmissionScore/" + data.id + "/",
                             datatype: 'json',
@@ -79,6 +85,7 @@ class ItemComponent extends React.Component {
                                     "total grade: " + object['total_grade'], 3000);
                             }.bind(this)
                         });
+                        */
                     }.bind(this)
                 });
             }.bind(this)
@@ -93,20 +100,36 @@ class ItemComponent extends React.Component {
         };
         var dateString = new Date(this.state.item.created_at);
         dateString = dateString.getDate() + "/" + dateString.getMonth() + "/" + dateString.getFullYear();
-        return <li key={this.state.item.id} style={liStyle}>
-            <div>Item: {this.state.item.item}</div>
-            <div>Author:{this.state.item.description.split("from")[1]}</div>
-            <div>
-                <p>
-                    <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
-                </p>
+        return <li key={this.state.item.id} className="list-group-item">
 
-                <p style={{textAlign: "right"}}>Submitted on: {dateString}<br/>Curated by {this.state.item.number_of_times_curated} users</p>
+        <div className="media">
+          <div className="media-body">
+            <div className="media-meta pull-right action-buttons">
+                 <button id='d1' onClick={() => this.deleteItem()} className="btn btn-sm trash"><span className="glyphicon glyphicon-trash"></span></button>
             </div>
+            <p className="summary">{this.state.item.item}</p>
+            <p className="title">
+              Submitted on: {dateString} | Curated by: {this.state.item.number_of_times_curated} users
+            </p>
+
+          </div>
+        </div>
         </li>
     }
 
 }
+
+/*
+<div>Item: {this.state.item.item}</div>
+<div>Author:{this.state.item.description.split("from")[1]}</div>
+<div>
+    <p>
+        <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
+    </p>
+
+    <p style={{textAlign: "right"}}>Submitted on: {dateString}<br/>Curated by {this.state.item.number_of_times_curated} users</p>
+</div>
+*/
 
 class AddItemForm extends React.Component {
     constructor(props) {
@@ -139,8 +162,10 @@ class AddItemForm extends React.Component {
     //This will need to be updated with proper user info !
     componentDidMount() {
         this.loadSubmissionsFromServer();
+        /*
         setInterval(() => this.loadSubmissionsFromServer(),
             this.props.pollInterval);
+        */
 
     }
 
@@ -162,16 +187,22 @@ class AddItemForm extends React.Component {
         event.preventDefault();
         if (submission == undefined) {
             //Create new submission
+
+
             $.ajax({
                 url: "/api/LearnerPerspectiveSubmission/",
                 datatype: 'json',
                 contentType: 'application/json; charset=utf-8',
                 type: "POST",
+                beforeSend: function(xhr, settings) {
+                  //console.log("before send run", csrftoken)
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                },
                 data: JSON.stringify(
                     {
                         "sharing": "Share with other learners",
                         "selected_perspective": "" + perspective,
-                        "created_by": "1", //update this with user info !
+                        "created_by": user_id, //username is a global variable
                         "activity": "" + activity.id
                     }),
                 success: function (data) {
@@ -190,7 +221,14 @@ class AddItemForm extends React.Component {
                                 "position": this.state.position
                             }),
                         cache: false,
+                        beforeSend: function(xhr, settings) {
+                          //console.log("before send run", csrftoken)
+                                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        },
                         success: function () {
+                            this.props.submissionschanged();
+                            this.state.item = "";
+                            /*
                             $.ajax({
                                 url: "/perspectivesX/GetSubmissionScore/" + submission.id + "/",
                                 datatype: 'json',
@@ -206,6 +244,7 @@ class AddItemForm extends React.Component {
                                         "total grade: " + object['total_grade'], 3000);
                                 }.bind(this)
                             });
+                            */
                         }.bind(this)
                     });
                 }.bind(this),
@@ -217,6 +256,10 @@ class AddItemForm extends React.Component {
                 contentType: 'application/json; charset=utf-8',
                 crossDomain: true,
                 type: "POST",
+                beforeSend: function(xhr, settings) {
+                  //console.log("before send run", csrftoken)
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                },
                 data: JSON.stringify(
                     {
                         "learner_submission": "" + submission.id,
@@ -226,6 +269,9 @@ class AddItemForm extends React.Component {
                     }),
                 cache: false,
                 success: function () {
+                    this.props.submissionschanged();
+                    this.state.item = "";
+                    /*
                     $.ajax({
                         url: "/perspectivesX/GetSubmissionScore/" + submission.id + "/",
                         datatype: 'json',
@@ -241,6 +287,7 @@ class AddItemForm extends React.Component {
                                 "total grade: " + object['total_grade'], 3000);
                         }.bind(this)
                     });
+                    */
                 }.bind(this)
             });
         }
@@ -251,14 +298,26 @@ class AddItemForm extends React.Component {
         return (
             <div className="add-item" style={{float: "right"}}>
                 <form onSubmit={this.handleSubmit}>
-                    <label>Add new Item</label>
-                    <input type="text" value={this.state.item} onChange={this.handleChange}/>
-                    <input type="submit" value="Submit" className="btn btn-primary btn-md"/>
+
+                <div className="input-group">
+                    <input type="text" value={this.state.item} onChange={this.handleChange} className="form-control input-sm chat-input" placeholder="Enter your item here..." />
+            	      <span className="input-group-btn">
+                      <button type="submit" className="btn btn-primary btn-md">
+                        <span className="glyphicon glyphicon-comment"></span> Add Item
+                      </button>
+                    </span>
+                </div>
                 </form>
             </div>
         )
     }
 }
+/*
+
+<label>Add new Item</label>
+<input type="text" value={this.state.item} onChange={this.handleChange}/>
+<input type="submit" value="Submit" className="btn btn-primary btn-md"/>
+*/
 
 class CuratedItemComponent extends React.Component {
 
@@ -307,6 +366,10 @@ class CuratedItemComponent extends React.Component {
             contentType: 'application/json; charset=utf-8',
             type: "DELETE",
             cache: false,
+            beforeSend: function(xhr, settings) {
+              console.log("before send run", csrftoken)
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            },
             success: function () {
                 $.ajax({
                     url: "/api/LearnerPerspectiveSubmission/" + this.state.inner.learner_submission + "/",
@@ -345,19 +408,39 @@ class CuratedItemComponent extends React.Component {
         var dateString = new Date(this.state.inner['created_at']);
         dateString = dateString.getDate() + "/" + dateString.getMonth() + "/" + dateString.getFullYear();
         return <li key={this.state.item.id} style={liStyle}>
-            <div>Item: {this.state.inner['item']}</div>
-            <div>Author:{this.state.inner['description'].split("from")[1]}</div>
-            <div>
-                <p>
-                    <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
-                </p>
-                <p style={{textAlign: "right"}}>Submitted on: {dateString}</p>
+
+        <div className="media">
+          <div className="media-body">
+            <div className="media-meta pull-right action-buttons">
+                 <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm trash"><span className="glyphicon glyphicon-trash"></span></button>
             </div>
+            <p class="summary">{this.state.inner['item']}</p>
+            <p class="title">
+              Author: {this.state.inner['description'].split("from")[1]} | Submitted on: {dateString} | Curated by: 5 users
+            </p>
+
+          </div>
+        </div>
         </li>
     }
-
 }
+/*
 
+<div>Item: {this.state.inner['item']}</div>
+<div>Author:{this.state.inner['description'].split("from")[1]}</div>
+<div>
+    <p>
+        <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
+    </p>
+    <p style={{textAlign: "right"}}>Submitted on: {dateString}</p>
+</div>
+
+
+<a href="http://www.jquery2dotnet.com"><span className="glyphicon glyphicon-pencil"></span></a>
+<button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm">delete</button>
+<a href="http://www.jquery2dotnet.com" className="trash"><span className="glyphicon glyphicon-trash"></span></a>
+<a href="http://www.jquery2dotnet.com" className="flag"><span className="glyphicon glyphicon-flag"></span></a>
+*/
 
 class PerspectiveComponent extends React.Component {
 
@@ -368,12 +451,14 @@ class PerspectiveComponent extends React.Component {
 
     loadItemsFromServer() {
         var cur = this;
+        //console.log("api url", "/perspectivesX/get_user_submission_items/" + this.state.activity.id + "/" + this.state.perspective + "/" + username +"/");
         $.ajax({
-            url: "/perspectivesX/get_user_submission_items/" + this.state.activity.id + "/" + this.state.perspective + "/",
+            url: "/perspectivesX/get_user_submission_items/" + this.state.activity.id + "/" + this.state.perspective + "/" + username +"/",
             datatype: 'json',
             contentType: 'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
+                //console.log(data);
                 this.setState({items: data});
                 this.setState({count: this.state.items.length});
             }.bind(this)
@@ -381,7 +466,7 @@ class PerspectiveComponent extends React.Component {
 
         var cur = this;
         $.ajax({
-            url: "/perspectivesX/get_user_curated_items/" + this.state.activity.id + "/" + this.state.perspective + "/",
+            url: "/perspectivesX/get_user_curated_items/" + this.state.activity.id + "/" + this.state.perspective + "/" + username +"/",
             datatype: 'json',
             contentType: 'application/json; charset=utf-8',
             cache: false,
@@ -391,11 +476,12 @@ class PerspectiveComponent extends React.Component {
         });
     }
 
-
     componentDidMount() {
         this.loadItemsFromServer();
+        /*
         setInterval(() => this.loadItemsFromServer(),
             this.props.pollInterval);
+        */
 
     }
 
@@ -403,13 +489,11 @@ class PerspectiveComponent extends React.Component {
         const listStyleType = {
             listStyleType: 'none'
         };
-        const containerStyle = {
-            marginLeft: "15px",
-            marginRight: "15px"
-        };
 
         const columnStyle = {
-            marginRight: "10px",
+            marginRight: "2px",
+            backgroundColor: "white",
+            border: "none"
         };
         var itemNodes = this.state.items.map(
             (item) => this.mapItem(item)
@@ -421,9 +505,7 @@ class PerspectiveComponent extends React.Component {
 
         //if(curatedNodes.length>0 && itemNodes.length>0) {
         if (curatedNodes.length == 0) {
-            curatedNodes = <li> No curated items. <br/><a
-                href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
-                className="btn btn-primary btn-md">Start Curating</a></li>;
+            curatedNodes = <li> No curated items. <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}>Click here to start curating.</a></li>;
         }
         var submissionButtonText = "Edit Submission"
         if (itemNodes.length == 0) {
@@ -434,46 +516,47 @@ class PerspectiveComponent extends React.Component {
         var url = "/perspectivesX/submission/" + this.props.activityName.replace(" ", "-").toLowerCase() + "/" + this.state.perspective + "/";
 
         return (
-            <div className="container-fluid" style={containerStyle}>
-                <div className="row row-eq-height">
+
                     <div className="col-md-6" style={columnStyle}>
-                        <div className="well">
-                            <p>Submitted for {this.props.name} :</p>
-                            <ul style={listStyleType}>
-                                {itemNodes}
-                                <a href={url}
-                                   className="btn btn-primary btn-md" style={{float: "left"}}>{submissionButtonText}
-                                </a>
-                                <AddItemForm activity={this.state.activity} perspective={this.state.perspective}
-                                             position={this.state.count} pollInterval={this.props.pollInterval}/>
-                            </ul>
-                            <br/><br/>
-                            <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
-                               className="btn btn-primary btn-md">View all</a>
+
+                        <div className="panel panel-default">
+                            <div className="panel-heading">{this.props.name}</div>
+                            <div className="panel-body">
+                              <AddItemForm activity={this.state.activity} perspective={this.state.perspective}
+                                         position={this.state.count} submissionschanged={this.loadItemsFromServer.bind(this)} pollInterval={this.props.pollInterval}/>
+                              <p><strong>Your Submissions:</strong></p>
+                              <ul className="list-group" style={listStyleType}>
+                                  {itemNodes}
+                              </ul>
+                              <br/>
+                              <p><strong>Curated Submissions:</strong></p>
+                              <ul style={listStyleType}>
+                                  {curatedNodes}
+                              </ul>
+                              <br/>
+                              <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
+                                 className="btn btn-primary btn-block">View other students submissions</a>
+                            </div>
                         </div>
                     </div>
-                    <div className="col-md-6">
-                        <div className="well">
-                            <p>Curated for {this.props.name} :</p>
-                            <ul style={listStyleType}>
-                                {curatedNodes}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
         )
 
     }
 
     mapCuratedItem(curated){
-        return <CuratedItemComponent item={curated} key={curated.id} pollInterval={this.props.pollInterval}/>
+        return <CuratedItemComponent item={curated} key={curated.id} submissionschanged={this.loadItemsFromServer.bind(this)} pollInterval={this.props.pollInterval}/>
     }
     mapItem(item){
-        return <ItemComponent item={item} key={item.id} pollInterval={this.props.pollInterval}/>
+        return <ItemComponent item={item} key={item.id} submissionschanged={this.loadItemsFromServer.bind(this)} pollInterval={this.props.pollInterval}/>
     }
 }
 
+/*
+
+<!--<a href={url}
+   className="btn btn-primary btn-md" style={{float: "left"}}>{submissionButtonText}
+</a>-->
+*/
 
 class PerspectiveGridComponent extends React.Component {
     constructor(props) {
@@ -496,12 +579,35 @@ class PerspectiveGridComponent extends React.Component {
 
     componentDidMount() {
         this.loadPerspectivesFromServer();
+        /*
         setInterval(() => this.loadPerspectivesFromServer(),
             this.props.pollInterval);
+            */
+    }
+
+    renderPerspectives() {
+
+      var separateElements = [];
+
+      for(var i = 0; i < this.state.perspectives.length; i+=2) {
+           var oneRow = [];
+           oneRow.push(this.state.perspectives.slice(i, i+2).map(perspective => this.mapPerspectives(perspective)));
+           //console.log(oneRow);
+           separateElements.push(oneRow.map(itm => {return <div key={i} className="row row-eq-height">{itm}</div>}))
+      }
+
+      //console.log(separateElements);
+      return separateElements;
     }
 
     //take care  of no perspective case
     render() {
+
+        const containerStyle = {
+            marginLeft: "15px",
+            marginRight: "15px"
+        };
+
         if (this.state.perspectives) {
             var perspectiveNodes = this.state.perspectives.map(
                 (perspective) => this.mapPerspectives(perspective)
@@ -515,9 +621,14 @@ class PerspectiveGridComponent extends React.Component {
 
                 <div className="row">
                     <div>
-                        <h3>{this.state.activity.title}</h3> <IconComponent template={this.state.activity.template}/>
+                        <h3>{this.state.activity.title}</h3>
                     </div>
-                    {perspectiveNodes}
+                    <div className="container-fluid" style={containerStyle}>
+
+                         {this.renderPerspectives()}
+
+                     </div>
+
                 </div>
             )
         }
@@ -531,45 +642,54 @@ class PerspectiveGridComponent extends React.Component {
     }
 }
 
+
+/*
+<IconComponent template={this.state.activity.template}/>
+*/
+
 class ActivityGridComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {activities: []};
+        this.state = {activity: []};
 
     }
 
     loadActivitiesFromServer() {
         var cur = this;
         $.ajax({
-            url: "/api/Activity/",
+            url: "/api/Activity/"+this.props.activity_id+"/",
             type: "GET",
             datatype: 'json',
             contentType: 'application/json; charset=utf-8',
             cache: false,
             success: function (data) {
-                this.setState({activities: data});
+                this.setState({activity: data});
             }.bind(this)
         });
     }
 
     componentDidMount() {
         this.loadActivitiesFromServer();
+        /*
         setInterval(() => this.loadActivitiesFromServer(),
             this.props.pollInterval);
+        */
     }
 
     render() {
-        if (this.state.activities) {
+        if (this.state.activity) {
             const containerStyle = {
                 marginLeft: "15px",
                 marginRight: "15px"
             };
 
+            /*
             var perspectiveGrids = this.state.activities.map(
                 (activity) => this.mapPerspectiveGrid(activity)
             );
-
+            */
+            var perspectiveGrids = this.mapPerspectiveGrid(this.state.activity);
 
             return (
 
@@ -587,8 +707,6 @@ class ActivityGridComponent extends React.Component {
     }
 }
 
+console.log('activity_id', activity_id);
 
-ReactDOM.render(<ActivityGridComponent pollInterval={1000}/>, document.getElementById("container"));
-
-
-
+ReactDOM.render(<ActivityGridComponent activity_id={activity_id} pollInterval={1000}/>, document.getElementById("container"));
