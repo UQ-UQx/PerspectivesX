@@ -63,6 +63,10 @@ class Activity(models.Model):
     title = models.CharField(max_length=5000, blank=False, verbose_name="Activity Name")
     description = models.TextField(blank=False)
     slug = models.SlugField()
+
+    perspective_terminology = models.CharField(max_length=1000, blank=False, default="perspective", verbose_name="Perspective Terminology")
+    item_terminology = models.CharField(max_length=1000, blank=False, default="item", verbose_name="Item Terminology")
+
     template = models.ForeignKey(Template)
 
     SELECTED = 'Allow learners to choose a perspective'

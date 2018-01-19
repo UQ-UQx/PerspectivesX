@@ -13,7 +13,7 @@ urlpatterns = [
                   url(r'^get_user_submission_items/(?P<activity>\d+)/(?P<perspective>\d+)/(?P<username>[\w\-\.\:]+)/$',
                       UserSubmissionItemList.as_view(),
                       name="REST_user_sub_items"),
-                  url(r'^display_perspective_items/(?P<activity>\d+)/(?P<perspective>\d+)/$', display_perspective_items,
+                  url(r'^display_perspective_items/(?P<activity>\d+)/(?P<perspective>\d+)/(?P<resource_link_id>[\w\-\.]+)/$', display_perspective_items,
                       name="display_perspective_items"),
                   url(r'^get_user_curated_items/(?P<activity>\d+)/(?P<perspective>\d+)/(?P<username>[\w\-\.\:]+)/$',
                       UserCuratedItemList.as_view(),

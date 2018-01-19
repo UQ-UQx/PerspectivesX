@@ -22,6 +22,10 @@
     var activity_id={{activity_id}};
     var username="{{username}}";
     var user_id ="{{user_id}}";
+    var resource_link_id="{{resource_link_id}}"
+
+    var perspective_terminology = "{{perspective_terminology}}"
+    var item_terminology = "{{item_terminology}}"
 
     function getCookie(name) {
         var cookieValue = null;
@@ -40,32 +44,12 @@
     }
     var csrftoken = getCookie('csrftoken');
 
-    /*
-
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
-    */
     </script>
 
 </head>
 <body>
 {% load render_bundle from webpack_loader %}
 <div class="container-fluid">
-    <div class=jumbotron align="center">
-        <h2>
-            PerspectivesX: Student View
-        </h2>
-    </div>
     <div class="row" id='container'>
       {% include "roleswitch.html" with resource_link_id=resource_link_id role=role display_view=display_view allowed_admin_roles=allowed_admin_roles %}
 

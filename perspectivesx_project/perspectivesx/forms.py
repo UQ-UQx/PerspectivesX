@@ -9,6 +9,10 @@ class ActivityForm(forms.ModelForm):
 
     title = forms.CharField(max_length = 5000, label= "Title:")
     description = forms.CharField(label = "Decription:", widget= forms.Textarea)
+
+    perspective_terminology = forms.CharField(max_length = 1000, label= "Perspective Terminology:")
+    item_terminology = forms.CharField(max_length = 1000, label= "Item Terminology:")
+
     template = forms.ModelChoiceField(queryset = Template.objects.all() ,label= "Choose activity template:")
 
     SELECTED = 'Allow learners to choose a perspective'
@@ -68,7 +72,7 @@ class ActivityForm(forms.ModelForm):
         self.helper.layout = Layout(
             HTML('<div class="form-group"><label class="control-label control-label col-sm-2">Activity ID:</label><div class="controls col-sm-10">' + str(activity_id) + '</div></div>'),
             Fieldset(
-            "",'title','description','template',
+            "",'title','description','template','perspective_terminology', 'item_terminology',
             FormActions(
                 HTML("OR &emsp; "),
                 StrictButton("Create Custom Template", name="create template",
@@ -85,7 +89,7 @@ class ActivityForm(forms.ModelForm):
     class Meta:
         #associate activity Form with an Activity
         model = Activity
-        fields= ('title','description','template','perspective_selection','enable_curation','kb_setting',
+        fields= ('title','description','perspective_terminology', 'item_terminology', 'template','perspective_selection','enable_curation','kb_setting',
                  'contribution_score','curation_score','minimum_contributions','minimum_curations')
 
 class LearnerSubmissionItemForm(forms.ModelForm):

@@ -407,12 +407,12 @@ class CuratedItemComponent extends React.Component {
         };
         var dateString = new Date(this.state.inner['created_at']);
         dateString = dateString.getDate() + "/" + dateString.getMonth() + "/" + dateString.getFullYear();
-        return <li key={this.state.item.id} style={liStyle}>
+        return <li key={this.state.item.id} className="list-group-item">
 
         <div className="media">
           <div className="media-body">
             <div className="media-meta pull-right action-buttons">
-                 <button id='d1' onClick={() => this.deleteItem()} className="btn btn-primary btn-sm trash"><span className="glyphicon glyphicon-trash"></span></button>
+                 <button id='d1' onClick={() => this.deleteItem()} className="btn btn-sm trash"><span className="glyphicon glyphicon-trash"></span></button>
             </div>
             <p class="summary">{this.state.inner['item']}</p>
             <p class="title">
@@ -424,6 +424,7 @@ class CuratedItemComponent extends React.Component {
         </li>
     }
 }
+
 /*
 
 <div>Item: {this.state.inner['item']}</div>
@@ -530,11 +531,11 @@ class PerspectiveComponent extends React.Component {
                               </ul>
                               <br/>
                               <p><strong>Curated Submissions:</strong></p>
-                              <ul style={listStyleType}>
+                              <ul className="list-group" style={listStyleType}>
                                   {curatedNodes}
                               </ul>
                               <br/>
-                              <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}
+                              <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/" + resource_link_id +"/"}
                                  className="btn btn-primary btn-block">View other students submissions</a>
                             </div>
                         </div>

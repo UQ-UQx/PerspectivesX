@@ -11,13 +11,13 @@ from random import randint
 from django.views.decorators.csrf import csrf_exempt
 from django_auth_lti.decorators import lti_role_required
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # import pdb; pdb.set_trace()
 
 """
 IN THIS DOCUMENT REPLACE "marcolindley" with LTI user information.
 """
-
 
 def index(request):
     """
@@ -82,7 +82,12 @@ def studentview(request,resource_link_id):
     #print(learnersubmissions)
     if (len(learnersubmissions)>0):
         #print("Display grid")
-        return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles, 'resource_link_id':resource_link_id, 'username': username, 'user_id':user_id, 'activity_id': activity_id})
+        #load activity Terminology
+        activity = Activity.objects.get(pk=activity_id)
+        perspective_terminology = activity.perspective_terminology
+        item_terminology = activity.item_terminology
+
+        return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles, 'resource_link_id':resource_link_id, 'username': username, 'user_id':user_id, 'activity_id': activity_id, 'perspective_terminology':perspective_terminology, 'item_terminology':item_terminology })
     else:
         #print("display submission form")
         return student_submission(request, resource_link_id, activity_id, extra=0, perspective=None)
@@ -515,7 +520,7 @@ def curate_item(request, activity_name_slug, item=None):
     # retrieve the item to curate
     activity = Activity.objects.get(slug=activity_name_slug)
     # replace with LTI info
-    curator = User.objects.get(username="marcolindley")
+    curator = User.objects.get(username="cuid:a0d05d435d1a7bbf1e90f99400750bc5")
     # Check wether item is set, if not either let the user select one or assign one randomly
     if (item == None):
         curator_mode = activity.enable_curation
@@ -565,18 +570,47 @@ def curate_item(request, activity_name_slug, item=None):
     return render(request, 'item_curator.html', context_dict)
 
 
-def display_perspective_items(request, activity, perspective):
+def display_perspective_items(request, activity, perspective, resource_link_id):
+    user = request.user
+    user_id = user.id
+    username = user.username
+
     # retrieve all items for perspective of activity
     grid_activity = Activity.objects.get(id=activity);
     template_item = TemplateItem.objects.get(id=perspective)
     perspective_submissions = LearnerPerspectiveSubmission.objects.filter(activity=activity).filter(
         selected_perspective=perspective)
-    perspective_items = LearnerSubmissionItem.objects.filter(learner_submission__in=perspective_submissions).order_by('-created_at')
+    perspective_items_list = LearnerSubmissionItem.objects.filter(learner_submission__in=perspective_submissions).order_by('-created_at')
+
+    page = request.GET.get('page', 1)
+
+    paginator = Paginator(perspective_items_list, 2)
+    no_pages = paginator.num_pages
+    try:
+        perspective_items = paginator.page(page)
+    except PageNotAnInteger:
+        perspective_items = paginator.page(1)
+    except EmptyPage:
+        perspective_items = paginator.page(paginator.num_pages)
 
     return render(request, 'perspective_display.html',
-                  {'items': perspective_items, 'perspective': template_item,
-                   'activity': grid_activity})
+                  {'resource_link_id':resource_link_id, 'items': perspective_items, 'perspective': template_item,
+                   'activity': grid_activity, 'activity_id':activity, 'user_id':user_id, 'username':username, 'page':page, 'no_pages':no_pages})
+'''
+def index(request):
+    user_list = User.objects.all()
+    page = request.GET.get('page', 1)
 
+    paginator = Paginator(user_list, 10)
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+
+    return render(request, 'core/user_list.html', { 'users': users })
+'''
 
 class TemplateViewSet(viewsets.ModelViewSet):
     queryset = Template.objects.all()
