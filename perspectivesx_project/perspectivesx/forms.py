@@ -144,9 +144,9 @@ class LearnerForm(forms.ModelForm):
     ANON = 'Share Anonymously'
     SHARE = 'Share with other learners'
     SHARE_OPTIONS = (
-        (NOSHARE, NOSHARE),
+        (SHARE, SHARE),
         (ANON, ANON),
-        (SHARE, SHARE)
+        (NOSHARE, NOSHARE),
     )
     #sharing stores the share mode selected by the user
     sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings')
@@ -185,13 +185,13 @@ class LearnerForm(forms.ModelForm):
 
         self.helper.layout = Layout(
 
-            Fieldset('Submit Perspective Items:',
-               HTML("<strong>Selected Perspective:</strong> " + selected_perspective),
-               InlineRadios('selected_perspective'),FormSetLayout('formset',header = "Perspective Contribution:"),InlineRadios('sharing'),
+            Fieldset('Scenario Contribution:',
+               HTML("<strong>Your selected Scenario:</strong> " + selected_perspective),
+               InlineRadios('selected_perspective'),FormSetLayout('formset',header = "Add signposts:"),InlineRadios('sharing'),
                      'activity','created_by'
             ),
             FormActions(
-                Submit("Save","Save"),Submit('Submit', 'Submit'),
+                Submit('Submit', 'Submit'),
             )
         )
 
@@ -331,7 +331,7 @@ class ItemChooseForm(forms.Form):
         self.helper.label_class = 'control-label col-sm-2'
         # define form layout
         self.helper.layout = Layout(
-            Fieldset('Choose {}'.format(self.item), 'item'),
+            Fieldset('Choose scenario', 'item'),
             FormActions(
                 Submit("Continue", "Continue")
             )

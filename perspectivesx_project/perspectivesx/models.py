@@ -138,8 +138,10 @@ class LearnerPerspectiveSubmission(models.Model):
     def save(self, *args, **kwargs):
         super(LearnerPerspectiveSubmission, self).save(*args, **kwargs)
         # create a new SubmissionScore object if it doesn't already exist
-        score,created = SubmissionScore.objects.get_or_create(submission=self);
-        score.save();
+        #score,created = SubmissionScore.objects.get_or_create(submission=self);
+        #score,created = SubmissionScore.objects.get_or_create(user=self.created_by);
+
+        #score.save();
 
     class Meta:
         ordering = ["activity", "created_by"]
@@ -168,16 +170,21 @@ class LearnerSubmissionItem(models.Model):
         # save instance
         super(LearnerSubmissionItem, self).save(*args, **kwargs)
         # update submission score
-        score = SubmissionScore.objects.get(submission=self.learner_submission)
-        score.save()
+        #score = SubmissionScore.objects.get(submission=self.learner_submission)
+        #score = SubmissionScore.objects.get(user=self.learner_submission.created_by)
+        #print(self.learner_submission.created_by.id)
+        #score,created = SubmissionScore.objects.get_or_create(user=self.learner_submission.created_by.id);
+        #score.save()
 
     def delete(self):
         # retrieve score for submission
-        score = SubmissionScore.objects.get(submission=self.learner_submission)
+        #score = SubmissionScore.objects.get(submission=self.learner_submission)
+        #score = SubmissionScore.objects.get(user=self.learner_submission.created_by.id)
+
         # go ahead and delete item
         super(LearnerSubmissionItem, self).delete()
         # update score
-        score.save()
+        #score.save()
 
     def __unicode__(self):
         return "Item number {} at {}".format(self.position, self.learner_submission)
@@ -201,20 +208,27 @@ class CuratedItem(models.Model):
         self.item.number_of_times_curated = self.item.number_of_times_curated+1
         self.item.save()
         # update submission score
+        '''
         score = SubmissionScore.objects.filter(submission__created_by=self.curator).filter(
             submission__activity=self.item.learner_submission.activity_id).get(
             submission__selected_perspective=self.item.learner_submission.selected_perspective_id)
-        score.save()
+        '''
+        #score = SubmissionScore.objects.filter(user=self.curator)
+        #score,created = SubmissionScore.objects.get_or_create(user=self.curator);
+
+        #score.save()
 
     def delete(self):
         # retrieve score for submission
-        score = SubmissionScore.objects.get(submission=self.item.learner_submission)
+        #score = SubmissionScore.objects.get(submission=self.item.learner_submission)
+        #score = SubmissionScore.objects.get(user=self.self.curator)
+
         self.item.number_of_times_curated = self.item.number_of_times_curated -1
         self.item.save()
         # go ahead and delete item
         super(CuratedItem, self).delete()
         # update score
-        score.save()
+        #score.save()
 
     class Meta:
         ordering = ['curator', 'item', 'comment']
@@ -222,19 +236,26 @@ class CuratedItem(models.Model):
 
 
 class SubmissionScore(models.Model):
-    submission = models.OneToOneField(LearnerPerspectiveSubmission)
+    #submission = models.OneToOneField(LearnerPerspectiveSubmission)
+    user = models.ForeignKey(User)
     participation_grade = models.IntegerField(default=0)
     curation_grade = models.IntegerField(default=0)
-    total_grade = models.IntegerField()
-
+    total_grade = models.IntegerField(default=0)
+    '''
     def save(self, *args, **kwargs):
-        activity = Activity.objects.get(id=self.submission.activity_id)
+        #activity = Activity.objects.get(id=self.submission.activity_id)
         # count all submission items for this submission
-        submission_count = LearnerSubmissionItem.objects.filter(learner_submission=self.submission).count()
+        #submission_count = LearnerSubmissionItem.objects.filter(learner_submission=self.submission).count()
+        submission_count = LearnerSubmissionItem.objects.filter(created_by=self.user).count()
+
         # count all curated items for this perspective of this activity
-        curated_count = CuratedItem.objects.filter(curator=self.submission.created_by).filter(
-            item__learner_submission__activity=activity).filter(
-            item__learner_submission__selected_perspective=self.submission.selected_perspective).count()
+
+        #curated_count = CuratedItem.objects.filter(curator=self.submission.created_by).filter(
+        #    item__learner_submission__activity=activity).filter(
+        #    item__learner_submission__selected_perspective=self.submission.selected_perspective).count()
+
+
+        curated_count = CuratedItem.objects.filter(curator=self.user).count()
         # calculate participation_grade
         self.participation_grade = min(1, float(submission_count / activity.minimum_contribution)) * 100
         # calculate contribution grade
@@ -244,7 +265,7 @@ class SubmissionScore(models.Model):
             (self.curation_grade * activity.curation_score) / 100)
         # save
         super(SubmissionScore, self).save(*args, **kwargs)
-
+    '''
     def __unicode__(self):
         return "{} \n Grades: \n Contribution: {}\n Curation: {} \n Total: {} \n".format(
-            self.submission, self.participation_grade, self.curation_grade, self.total_grade)
+            self.user, self.participation_grade, self.curation_grade, self.total_grade)

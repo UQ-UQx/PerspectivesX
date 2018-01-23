@@ -29,5 +29,5 @@ urlpatterns = [
                   url(r'^curate/(?P<activity_name_slug>[\w\-]+)/$', curate_item, name="Item Curator"),
                   url(r'^curate/(?P<activity_name_slug>[\w\-]+)/(?P<item>\d+)/$', curate_item,
                       name="Defined Item Curator"),
-                  url(r'GetSubmissionScore/(?P<submission>\d+)/$', GetSubmissionScore.as_view(),
+                  url(r'GetSubmissionScore/(?P<userid>\d+)/(?P<activity>\d+)/$', GetSubmissionScore.as_view(),
                       name="get_submission"), ]

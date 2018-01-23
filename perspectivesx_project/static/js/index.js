@@ -38,6 +38,26 @@ class IconComponent extends React.Component {
     }
 }
 
+class ScoreComponent extends React.Component {
+
+    //React component to display a score summary
+
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+
+        return (
+          <div id="score_pnl" className="pull-right">
+            <ul className="breadcrumb">
+            Score: {this.props.score}
+            </ul>
+          </div>
+        )
+    }
+}
+
 class ItemComponent extends React.Component {
 
     //React component to display a single submission Item.
@@ -108,7 +128,7 @@ class ItemComponent extends React.Component {
                  <button id='d1' onClick={() => this.deleteItem()} className="btn btn-sm trash"><span className="glyphicon glyphicon-trash"></span></button>
             </div>
             <p className="summary">{this.state.item.item}</p>
-            <p className="title">
+            <p className="title small">
               Submitted on: {dateString} | Curated by: {this.state.item.number_of_times_curated} users
             </p>
 
@@ -300,13 +320,14 @@ class AddItemForm extends React.Component {
                 <form onSubmit={this.handleSubmit}>
 
                 <div className="input-group">
-                    <input type="text" value={this.state.item} onChange={this.handleChange} className="form-control input-sm chat-input" placeholder="Enter your item here..." />
+                    <input type="text" value={this.state.item} onChange={this.handleChange} className="form-control input-sm chat-input" placeholder={`Enter your ${item_terminology} here...`} />
             	      <span className="input-group-btn">
-                      <button type="submit" className="btn btn-primary btn-md">
-                        <span className="glyphicon glyphicon-comment"></span> Add Item
+                      <button type="submit" className="btn btn-primary btn-sm">
+                        <span className="glyphicon glyphicon-comment"></span> Add {item_terminology}
                       </button>
                     </span>
                 </div>
+                <br/>
                 </form>
             </div>
         )
@@ -414,8 +435,8 @@ class CuratedItemComponent extends React.Component {
             <div className="media-meta pull-right action-buttons">
                  <button id='d1' onClick={() => this.deleteItem()} className="btn btn-sm trash"><span className="glyphicon glyphicon-trash"></span></button>
             </div>
-            <p class="summary">{this.state.inner['item']}</p>
-            <p class="title">
+            <p className="summary">{this.state.inner['item']}</p>
+            <p className="title small">
               Author: {this.state.inner['description'].split("from")[1]} | Submitted on: {dateString} | Curated by: 5 users
             </p>
 
@@ -475,6 +496,28 @@ class PerspectiveComponent extends React.Component {
                 this.setState({curated: data});
             }.bind(this)
         });
+
+        $.ajax(
+          {
+            url: "/perspectivesX/GetSubmissionScore/" + user_id+ "/" + activity_id+ "/",
+            datatype: 'json',
+            contentType: 'application/json; charset=utf-8',
+            type: "GET",
+            cache: false,
+            success: function (data) {
+              var object = data['0'];
+              this.props.scorechangeHandler(object['total_grade']);
+                /*
+
+                alert("Submission updated ! \n" +
+                    " Your new score is: \n" +
+                    "curation grade: " + object['curation_grade'] + "\n" +
+                    "participation grade: " + object['participation_grade'] + "\n" +
+                    "total grade: " + object['total_grade']);
+                */
+            }.bind(this)
+          })
+
     }
 
     componentDidMount() {
@@ -488,7 +531,12 @@ class PerspectiveComponent extends React.Component {
 
     render() {
         const listStyleType = {
-            listStyleType: 'none'
+            listStyleType: 'none',
+            overflow: "auto",
+            minHeight:"100px",
+            maxHeight:"260px"
+
+
         };
 
         const columnStyle = {
@@ -521,7 +569,7 @@ class PerspectiveComponent extends React.Component {
                     <div className="col-md-6" style={columnStyle}>
 
                         <div className="panel panel-default">
-                            <div className="panel-heading">{this.props.name}</div>
+                            <div className="panel-heading">{perspective_terminology}: {this.props.name}</div>
                             <div className="panel-body">
                               <AddItemForm activity={this.state.activity} perspective={this.state.perspective}
                                          position={this.state.count} submissionschanged={this.loadItemsFromServer.bind(this)} pollInterval={this.props.pollInterval}/>
@@ -562,7 +610,12 @@ class PerspectiveComponent extends React.Component {
 class PerspectiveGridComponent extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {perspectives: [], activity: props.activity};
+        this.state = {perspectives: [], activity: props.activity, score: 0};
+        this.scorechangeHandler = this.scorechangeHandler.bind(this);
+    }
+
+    scorechangeHandler(value) {
+      this.setState({ score: value })
     }
 
     loadPerspectivesFromServer() {
@@ -621,9 +674,12 @@ class PerspectiveGridComponent extends React.Component {
             return (
 
                 <div className="row">
+                    <ScoreComponent score={this.state.score} />
                     <div>
                         <h3>{this.state.activity.title}</h3>
+                        <div>{this.state.activity.description}</div>
                     </div>
+
                     <div className="container-fluid" style={containerStyle}>
 
                          {this.renderPerspectives()}
@@ -639,7 +695,7 @@ class PerspectiveGridComponent extends React.Component {
     mapPerspectives(perspective) {
         return <PerspectiveComponent activity={this.state.activity} perspective={perspective.id} name={perspective.name}
                                      activityName={this.state.activity.title} key={perspective.id}
-                                     pollInterval={this.props.pollInterval}/>;
+                                     pollInterval={this.props.pollInterval} scorechangeHandler={this.scorechangeHandler}/>;
     }
 }
 
@@ -708,6 +764,6 @@ class ActivityGridComponent extends React.Component {
     }
 }
 
-console.log('activity_id', activity_id);
+//console.log('activity_id', activity_id);
 
 ReactDOM.render(<ActivityGridComponent activity_id={activity_id} pollInterval={1000}/>, document.getElementById("container"));

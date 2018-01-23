@@ -1,5 +1,5 @@
 {% if role in allowed_admin_roles %}
-<div class = "pull-right">
+<div id="roleswitch" class="pull-right">
   {% if display_view == "student_view" %}
   <a href="/perspectivesX/add_activity/{{resource_link_id}}/">Edit Activity</a>
   {% else %}

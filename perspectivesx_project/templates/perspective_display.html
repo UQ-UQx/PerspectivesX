@@ -63,7 +63,7 @@
               var curated_count = parseInt($('#curatedcount_' + item_id).text());
               $('#curatedcount_' + item_id).text(curated_count + 1);
               $('#curatebtn_' + item_id).remove();
-              $('#curated_'+ item_id).html("Already curated.");
+              $('#curated_'+ item_id).html("Added to curation list.");
 
           }
       })
@@ -87,7 +87,7 @@
           <li class="list-group-item">
           <div class="media">
             <div class="media-body">
-              {% if item.learner_submission.created_by.id == user_id %}
+              {% if item.learner_submission.created_by.id != user_id %}
               <div id="curated_{{item.id}}" class="media-meta pull-right action-buttons">
                    <button id="curatebtn_{{item.id}}" onClick="curate({{item.id}})" class="btn btn-primary btn-sm trash"><span class="glyphicon glyphicon-copy"></span> Curate</button>
                    <!--<a href="{% url 'Defined Item Curator' item.learner_submission.activity.slug item.id %}"
@@ -96,7 +96,7 @@
               {% endif %}
               <p class="summary">{{ item.item }}</p>
               <p class="title">
-                Author: {{item.learner_submission.created_by.username}} {{item.learner_submission.created_by.id}} {{user_id}} | Submitted on: {{item.created_at}} | Curated by: <span id="curatedcount_{{item.id}}">{{item.number_of_times_curated}}</span> users
+                Author: {{item.learner_submission.created_by.username}} | Submitted on: {{item.created_at}} | Curated by: <span id="curatedcount_{{item.id}}">{{item.number_of_times_curated}}</span> users
               </p>
             </div>
           </div>

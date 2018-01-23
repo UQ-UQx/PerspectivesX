@@ -175,9 +175,10 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
     :param activity_name_slug: slug name of the activity
     :return:
     """
-
+    print("student_submission")
     # retrieve information from parameters
     activity = Activity.objects.get(id=activity_id)
+    print(activity)
     template = Template.objects.get(name=activity.template)
     # replace 'marcolindley' wiht LTI user info
     #user = User.objects.get(username='cuid:a0d05d435d1a7bbf1e90f99400750bc5')
@@ -212,6 +213,7 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
         perspective = int(perspective)
 
     context_dict = {'activity_name': activity.title}
+    context_dict['activity'] = activity
     # retrieve the instance (it might not exists handle with a try except block)
     try:
         instance = LearnerPerspectiveSubmission.objects.filter(activity=activity).get \
@@ -290,13 +292,14 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
                     # total_score = (participation_score * activity.contribution_score / 100) + \
                     #               (curation_score * activity.curation_score / 100)
 
-                    score = SubmissionScore.objects.get(submission=submission)
+                    #score = SubmissionScore.objects.get(submission=submission)
                     # score.participation_grade = participation_score
                     # score.curation_grade = curation_score
-                    score.save()
+                    #score.save()
 
-                    return index(request)
-
+                    #return index(request)
+                    return studentview(request,resource_link_id)
+                            
                 else:
                     # Something went wrong when validating the formset remove the submission
                     submission.delete()
@@ -322,6 +325,8 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
         formset = input_form_set(queryset=pre_existing_answers)
         context_dict['formset'] = formset
     context_dict['extra'] = extra
+
+    #print(context_dict)
     return render(request, 'learner_submission.html', context_dict)
 
 
@@ -584,7 +589,7 @@ def display_perspective_items(request, activity, perspective, resource_link_id):
 
     page = request.GET.get('page', 1)
 
-    paginator = Paginator(perspective_items_list, 2)
+    paginator = Paginator(perspective_items_list, 25)
     no_pages = paginator.num_pages
     try:
         perspective_items = paginator.page(page)
@@ -698,7 +703,32 @@ class GetSubmissionScore(generics.ListAPIView):
     serializer_class = SubmissionScoreSerializer
 
     def get_queryset(self):
-        return SubmissionScore.objects.filter(submission=self.kwargs['submission']);
+        #return SubmissionScore.objects.filter(submission=self.kwargs['submission']);
+        user_id = self.kwargs['userid']
+        activity_id = self.kwargs['activity']
+        user = User(id=user_id)
+        activity = Activity.objects.get(id=activity_id)
+
+        submission_count = LearnerSubmissionItem.objects.filter(learner_submission__created_by=user_id).count()
+        curated_count = CuratedItem.objects.filter(curator=user_id).count()
+        # calculate participation_grade
+        participation_grade = min(1, float(submission_count / activity.minimum_contribution)) * 100
+        # calculate contribution grade
+        curation_grade = min(1, float(curated_count / activity.minimum_curation)) * 100
+        # calculate total grade
+        total_grade = ((participation_grade * activity.contribution_score) / 100) + (
+            (curation_grade * activity.curation_score) / 100)
+
+        #score,created = SubmissionScore.objects.get_or_create(user=self.learner_submission.created_by.id);
+
+        submission_obj, created = SubmissionScore.objects.get_or_create(user=user);
+        submission_obj.participation_grade=participation_grade
+        submission_obj.curation_grade=curation_grade
+        submission_obj.total_grade=total_grade
+
+        submission_obj.save()
+
+        return SubmissionScore.objects.filter(user=self.kwargs['userid']);
 
 # class GetSubmissionFromCurated():
 #     """
