@@ -32,6 +32,9 @@ class TemplateItem(models.Model):
     name = models.CharField(max_length=5000, verbose_name="Item Name")
     # description = models.TextField(blank=False) not too sure if this is needed
     color = models.CharField(max_length=7, default="#ff0000")
+    icon_small = models.CharField(max_length=1000, blank=True, null=True)
+    icon_large = models.CharField(max_length=1000, blank=True, null=True)
+    color = models.CharField(max_length=7, default="#ff0000")
     position = models.PositiveSmallIntegerField(blank=True, null=True)
 
     template = models.ForeignKey(Template)
@@ -78,7 +81,7 @@ class Activity(models.Model):
         (ALL, ALL)
     )
     perspective_selection = models.CharField(max_length=100, choices=PERSPECTIVE_SELECTION_OPTIONS, default=RANDOM)
-
+    '''
     SELECTED = 'Allow learners to choose a perspective to curate'
     RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
     ALL = 'Allow Learners to curate all perspectives'
@@ -87,9 +90,11 @@ class Activity(models.Model):
         (RANDOM, RANDOM),
         (ALL, ALL)
     )
+    '''
 
-    enable_curation = models.CharField(max_length=100, choices=PERSPECTIVE_CURATION_OPTIONS, default=RANDOM)
+    #enable_curation = models.CharField(max_length=100, choices=PERSPECTIVE_CURATION_OPTIONS, default=RANDOM)
     view_knowledge_base_before_sumbmission = models.BooleanField(blank=False, default=False)
+    enable_search = models.BooleanField(blank=False, default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     contribution_score = models.IntegerField(default=50)

@@ -32,6 +32,7 @@ def index(request):
     allowed_admin_roles = ['Administrator', 'Instructor']
     return render(request, 'index.html', {'role': role, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
 
+@xframe_options_exempt
 def LTItest(request):
     """
     Defines view for the home page.
@@ -61,6 +62,7 @@ def LTIindex(request):
         return redirect('studentview', resource_link_id=resource_link_id)
         #return studentview(request,resource_link_id)
 
+@xframe_options_exempt
 def studentview(request,resource_link_id):
 
     LTI = request.session['perspectivesx_'+resource_link_id]
@@ -74,9 +76,10 @@ def studentview(request,resource_link_id):
 
     #if student has made a perspectivesubmission display the grid_activity
     #else display the submission form
-    current_user = request.user
+    username = "cuid:"+LTI.get('user_id')
+    current_user = User.objects.get(username=username) #request.user
     user_id = current_user.id
-    username = current_user.username
+    #username = current_user.username
     #print(user_id)
     learnersubmissions = LearnerPerspectiveSubmission.objects.filter(activity=activity_id,created_by=current_user.id)
     #print(learnersubmissions)
@@ -92,9 +95,11 @@ def studentview(request,resource_link_id):
         #print("display submission form")
         return student_submission(request, resource_link_id, activity_id, extra=0, perspective=None)
 
+@xframe_options_exempt
 def LTInot_authorized(request):
     return render(request, 'not_authorized.html', {'request': request})
 
+@xframe_options_exempt
 def add_activity(request,resource_link_id):
     """
     defines view for add activity page
@@ -137,7 +142,7 @@ def add_activity(request,resource_link_id):
 
     return render(request, 'add_activity.html', {'form': form, 'role': role, 'resource_link_id': resource_link_id, 'display_view': display_view, 'allowed_admin_roles':allowed_admin_roles})
 
-
+@xframe_options_exempt
 def choose_perspective(request, resource_link_id, activity_id, user, all=False):
     activity = Activity.objects.get(id=activity_id)
     if (all):
@@ -166,7 +171,7 @@ def choose_perspective(request, resource_link_id, activity_id, user, all=False):
 
     return render(request, 'choose_item.html', {'form': form})
 
-
+@xframe_options_exempt
 def student_submission(request, resource_link_id, activity_id, extra=0, perspective=None):
     """
     View for student submission page
@@ -175,14 +180,15 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
     :param activity_name_slug: slug name of the activity
     :return:
     """
-    print("student_submission")
+    #print("student_submission")
     # retrieve information from parameters
     activity = Activity.objects.get(id=activity_id)
-    print(activity)
+    #print(activity)
     template = Template.objects.get(name=activity.template)
-    # replace 'marcolindley' wiht LTI user info
-    #user = User.objects.get(username='cuid:a0d05d435d1a7bbf1e90f99400750bc5')
-    user = request.user
+
+    LTI = request.session['perspectivesx_'+resource_link_id]
+    username = "cuid:"+LTI.get('user_id')
+    user = User.objects.get(username=username) #request.user
     user_id = user.id
     # Check wether perspective is set, if not either let the user select one or assign one randomly
     if (perspective == None):
@@ -233,7 +239,7 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
 
     # If we get a POST
     if request.method == "POST":
-        print('student submission posted')
+        #print('student submission posted')
         # check the action, if it contains "add new" we are adding a form to the formset.
         if (request.POST.keys().__contains__('action') and request.POST['action'].__contains__("Add new")):
             # increment extra
@@ -298,11 +304,13 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
                     #score.save()
 
                     #return index(request)
+                    #print("about to run studentview")
                     return studentview(request,resource_link_id)
-                            
+
                 else:
                     # Something went wrong when validating the formset remove the submission
                     submission.delete()
+                    #print("random submission error")
                     print(formset.errors)
                     input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm,
                                                           extra=extra)
@@ -329,8 +337,8 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
     #print(context_dict)
     return render(request, 'learner_submission.html', context_dict)
 
-
-def create_template(request):
+@xframe_options_exempt
+def create_template(request, resource_link_id):
     context_dict = {}
     extra = 2
     if request.method == "POST":
@@ -371,7 +379,8 @@ def create_template(request):
                         item.template = template
                         item.save()
                         i += 1
-                    return index(request)
+                    #return index(request)
+                    redirect('studentview', resource_link_id=resource_link_id)
                 else:
                     # Something went wrong when validating the formset remove the template
                     template.delete()
@@ -484,7 +493,7 @@ def create_template(request):
 #     score = SubmissionScore.objects.get(id=updated_score);
 #     return render(request, "delete_success.html", {"score": score})
 
-
+@xframe_options_exempt
 def choose_curate_item(request, activity_name_slug, curator, all=False):
     activity = Activity.objects.get(slug=activity_name_slug)
     if (all):
@@ -519,7 +528,7 @@ def choose_curate_item(request, activity_name_slug, curator, all=False):
 
     return render(request, 'choose_item.html', {'form': form})
 
-
+@xframe_options_exempt
 def curate_item(request, activity_name_slug, item=None):
     context_dict = {}
     # retrieve the item to curate
@@ -574,14 +583,20 @@ def curate_item(request, activity_name_slug, item=None):
     context_dict['item'] = LearnerSubmissionItem.objects.get(id=item).item
     return render(request, 'item_curator.html', context_dict)
 
-
+@xframe_options_exempt
 def display_perspective_items(request, activity, perspective, resource_link_id):
-    user = request.user
+
+    LTI = request.session['perspectivesx_'+resource_link_id]
+    username = "cuid:"+LTI.get('user_id')
+    user = User.objects.get(username=username) #request.user
     user_id = user.id
-    username = user.username
 
     # retrieve all items for perspective of activity
     grid_activity = Activity.objects.get(id=activity);
+
+    perspective_terminology = grid_activity.perspective_terminology
+    item_terminology = grid_activity.item_terminology
+
     template_item = TemplateItem.objects.get(id=perspective)
     perspective_submissions = LearnerPerspectiveSubmission.objects.filter(activity=activity).filter(
         selected_perspective=perspective)
@@ -600,7 +615,10 @@ def display_perspective_items(request, activity, perspective, resource_link_id):
 
     return render(request, 'perspective_display.html',
                   {'resource_link_id':resource_link_id, 'items': perspective_items, 'perspective': template_item,
-                   'activity': grid_activity, 'activity_id':activity, 'user_id':user_id, 'username':username, 'page':page, 'no_pages':no_pages})
+                   'activity': grid_activity, 'activity_id':activity, 'user_id':user_id, 'username':username,
+                   'page':page, 'no_pages':no_pages,
+                   'perspective_terminology': perspective_terminology, 'item_terminology': item_terminology})
+
 '''
 def index(request):
     user_list = User.objects.all()
@@ -709,8 +727,11 @@ class GetSubmissionScore(generics.ListAPIView):
         user = User(id=user_id)
         activity = Activity.objects.get(id=activity_id)
 
-        submission_count = LearnerSubmissionItem.objects.filter(learner_submission__created_by=user_id).count()
-        curated_count = CuratedItem.objects.filter(curator=user_id).count()
+        submission_count = LearnerSubmissionItem.objects.filter(learner_submission__created_by=user_id, learner_submission__activity=activity).count()
+        #print("submission_count", submission_count);
+        curated_count = CuratedItem.objects.filter(curator=user_id, item__learner_submission__activity=activity).count()
+
+        #print("curated_count", curated_count);
         # calculate participation_grade
         participation_grade = min(1, float(submission_count / activity.minimum_contribution)) * 100
         # calculate contribution grade

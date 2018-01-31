@@ -31,7 +31,7 @@
         </div>
         <script>
         $("button.btn.create-template").click(function(){
-            window.location.href = "{%  url 'create_template' %}"
+            window.location.href = "/perspectivesX/create_template/{{resource_link_id}}";
         });
         $("#id_curation_score").change(function(){
             contribution_score  = 100-parseInt(document.getElementById('id_curation_score').value)

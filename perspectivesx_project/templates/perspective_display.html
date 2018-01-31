@@ -75,11 +75,14 @@
 <div class="container-fluid">
   <h1>{{activity.title}}</h1>
   <ul class="breadcrumb">
-    <li><a href="/perspectivesX/studentview/{{resource_link_id}}"><span class="glyphicon glyphicon-chevron-left"></span> View your submissions</a></li>
+    <li><a href="/perspectivesX/studentview/{{resource_link_id}}"><span class="glyphicon glyphicon-chevron-left"></span> View your Submissions Dashboard</a></li>
   </ul>
   <div class="panel panel-default">
       <div class="panel-heading">Submitted Items for: {{ perspective.name }}</div>
       <div class="panel-body">
+        {% if perspective.icon_large != "" %}
+            <p class="text-center"><img src="{{perspective.icon_large}}" /></p>
+        {% endif %}
         <p>Displaying page <span class="badge">{{page}}</span> of <span class="badge">{{no_pages}}</span></p>
        {% if items %}
         <ul class="list-group">
@@ -89,9 +92,7 @@
             <div class="media-body">
               {% if item.learner_submission.created_by.id != user_id %}
               <div id="curated_{{item.id}}" class="media-meta pull-right action-buttons">
-                   <button id="curatebtn_{{item.id}}" onClick="curate({{item.id}})" class="btn btn-primary btn-sm trash"><span class="glyphicon glyphicon-copy"></span> Curate</button>
-                   <!--<a href="{% url 'Defined Item Curator' item.learner_submission.activity.slug item.id %}"
-                      class="btn btn-primary btn-md">Curate it !</a>-->
+                   <button id="curatebtn_{{item.id}}" onClick="curate({{item.id}})" class="btn btn-primary"><span class="glyphicon glyphicon-copy"> </span> Add to my {{perspective_terminology}}</button>
               </div>
               {% endif %}
               <p class="summary">{{ item.item }}</p>
@@ -107,9 +108,7 @@
             <div class="row well well-sm" align = "center">
 
                 <h4>No items have been submitted for this perspective!</h4><br>
-                <!--Be the first to contribute !<br>
-                <a href="{% url 'Defined submission' activity.slug perspective.id %}" class="btn btn-primary btn-md">New Submission</a>
-                -->
+
             </div>
         {% endif %}
       </div>

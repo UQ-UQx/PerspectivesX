@@ -25,7 +25,7 @@ urlpatterns = [
                   url(r'^submission/(?P<resource_link_id>[\w\-\.]+)/(?P<activity_id>\d+)/$', student_submission, name='submission'),
                   url(r'^submission/(?P<resource_link_id>[\w\-\.]+)/(?P<activity_id>\d+)/(?P<perspective>\d+)/$', student_submission,
                       name="Defined submission"),
-                  url(r'^create_template/$', create_template, name='create_template'),
+                  url(r'^create_template/(?P<resource_link_id>[\w\-\.]+)$', create_template, name='create_template'),
                   url(r'^curate/(?P<activity_name_slug>[\w\-]+)/$', curate_item, name="Item Curator"),
                   url(r'^curate/(?P<activity_name_slug>[\w\-]+)/(?P<item>\d+)/$', curate_item,
                       name="Defined Item Curator"),

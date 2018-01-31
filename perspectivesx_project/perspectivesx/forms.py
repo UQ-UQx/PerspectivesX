@@ -26,6 +26,7 @@ class ActivityForm(forms.ModelForm):
     perspective_selection = forms.ChoiceField(choices = PERSPECTIVE_SELECTION_OPTIONS, label= "Learner Contribution:",
                                              widget= forms.RadioSelect)
 
+    '''
     SELECTED = 'Allow learners to choose a perspective to curate'
     RANDOM = 'Randomly assign a perspective that learners have not attempted for curation'
     ALL = 'Allow Learners to curate all perspectives'
@@ -47,6 +48,11 @@ class ActivityForm(forms.ModelForm):
     )
     kb_setting = forms.ChoiceField(choices =KB_SETTINGS_OPTIONS, label= "Knowledge Base Setting:",
                                    widget=forms.RadioSelect)
+    '''
+
+    view_knowledge_base_before_sumbmission = forms.BooleanField(label ="Allow learners to view Knowledge base before submission", initial = False)
+    enable_search = forms.BooleanField(label ="Enable search", initial = False)
+
     contribution_score = forms.IntegerField(label ="Contribution Score", initial = 50)
     curation_score = forms.IntegerField(label= "Curation Score", initial = 50)
     minimum_contributions = forms.IntegerField(label= "Minimum Number of Contributions", initial = 3 )
@@ -77,7 +83,7 @@ class ActivityForm(forms.ModelForm):
                 HTML("OR &emsp; "),
                 StrictButton("Create Custom Template", name="create template",
                             value="create template",css_class= 'create-template')),
-           'perspective_selection','enable_curation','kb_setting',
+           'perspective_selection','view_knowledge_base_before_sumbmission','enable_search',
             PrependedText('contribution_score', '%', active=True),
             PrependedText('curation_score','%',active= True),'minimum_contributions','minimum_curations'
              ),
@@ -89,7 +95,7 @@ class ActivityForm(forms.ModelForm):
     class Meta:
         #associate activity Form with an Activity
         model = Activity
-        fields= ('title','description','perspective_terminology', 'item_terminology', 'template','perspective_selection','enable_curation','kb_setting',
+        fields= ('title','description','perspective_terminology', 'item_terminology', 'template','perspective_selection','view_knowledge_base_before_sumbmission','enable_search',
                  'contribution_score','curation_score','minimum_contributions','minimum_curations')
 
 class LearnerSubmissionItemForm(forms.ModelForm):
@@ -149,7 +155,7 @@ class LearnerForm(forms.ModelForm):
         (NOSHARE, NOSHARE),
     )
     #sharing stores the share mode selected by the user
-    sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings')
+    sharing = forms.ChoiceField(choices = SHARE_OPTIONS ,label = 'Privacy Settings', initial="Share with other learners")
     #activity maps the submission to the undertaken activity
     activity = forms.ModelChoiceField(queryset=Activity.objects.all(),widget = forms.HiddenInput)
     #maps the submission to a particular user; TO BE UPDATED WITH LTI INFO
@@ -185,8 +191,8 @@ class LearnerForm(forms.ModelForm):
 
         self.helper.layout = Layout(
 
-            Fieldset('Scenario Contribution:',
-               HTML("<strong>Your selected Scenario:</strong> " + selected_perspective),
+            Fieldset('Your initial contributions:',
+               HTML("<strong>Please submit items for:</strong> " + selected_perspective),
                InlineRadios('selected_perspective'),FormSetLayout('formset',header = "Add signposts:"),InlineRadios('sharing'),
                      'activity','created_by'
             ),
@@ -199,13 +205,15 @@ class LearnerForm(forms.ModelForm):
         model = LearnerPerspectiveSubmission
         fields = ('selected_perspective','sharing','activity','created_by')
 
-
 class TemplateItemForm(forms.ModelForm):
-    name = forms.CharField(max_length= 500, label = '', initial = "Describe Perspectiveitem")
+    name = forms.CharField(max_length= 500, label = 'Name:', initial = "Perspective/Dimension Name")
     color = forms.CharField(max_length= 7, label = "Color: ", required = False,
                             widget= forms.TextInput(attrs = {'type': 'color', 'style': 'width: 10%  '}))
+    icon_small = forms.CharField(max_length=1000, label = 'Small Icon', initial = "/path/to/iconsm.png")
+    icon_large = forms.CharField(max_length=1000, label = 'Large Icon', initial = "/path/to/iconlg.png")
     position = forms.IntegerField(widget = forms.HiddenInput, required = False)
     template = forms.ModelChoiceField(queryset= [],widget= forms.HiddenInput, required = False)
+
 
     def __init__(self,*args,**kwargs):
         super(TemplateItemForm, self).__init__(*args, **kwargs)
@@ -214,10 +222,10 @@ class TemplateItemForm(forms.ModelForm):
         self.helper.form_method = 'post'
 
         self.helper.layout = Layout(
-            Fieldset('','name','color','position','template'))
+            Fieldset('Perspective/Dimension:','name','color', 'icon_small', 'icon_large', 'position','template'))
     class Meta:
         model = TemplateItem
-        fields = ('name','color','position', 'template')
+        fields = ('name','color','icon_small', 'icon_large', 'position', 'template')
 
 
 class TemplateCreatorForm(forms.ModelForm):

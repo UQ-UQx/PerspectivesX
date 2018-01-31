@@ -164,7 +164,7 @@ class AddItemForm extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
-
+    // todo: only return matching submissions for user in activity in perspective
     loadSubmissionsFromServer() {
         var cur = this;
         $.ajax({
@@ -198,7 +198,7 @@ class AddItemForm extends React.Component {
         var perspective = this.state.perspective;
 
         var submissionArray = this.state.submission.filter(function (submission) {
-            return (submission.activity == activity.id && submission.selected_perspective == perspective);
+            return (submission.activity == activity.id && submission.selected_perspective == perspective && submission.created_by == user_id);
         });
 
         var submission = submissionArray[0];
@@ -554,11 +554,11 @@ class PerspectiveComponent extends React.Component {
 
         //if(curatedNodes.length>0 && itemNodes.length>0) {
         if (curatedNodes.length == 0) {
-            curatedNodes = <li> No curated items. <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}>Click here to start curating.</a></li>;
+            curatedNodes = <li> You have not added {item_terminology}s submitted by other learners. <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/"}>Click here to start curating.</a></li>;
         }
         var submissionButtonText = "Edit Submission"
         if (itemNodes.length == 0) {
-            itemNodes = <li>No submissions items for this perspective.<br/><br/></li>;
+            itemNodes = <li>You have not submitted any {item_terminology}s. Please use the Add {item_terminology} form.</li>;
             submissionButtonText = "New Submission"
         }
 
@@ -569,7 +569,10 @@ class PerspectiveComponent extends React.Component {
                     <div className="col-md-6" style={columnStyle}>
 
                         <div className="panel panel-default">
-                            <div className="panel-heading">{perspective_terminology}: {this.props.name}</div>
+                            <div className="panel-heading">
+                            {this.props.icon!="" ? <img src={this.props.icon} /> : ''}
+                            {perspective_terminology}: {this.props.name}
+                            </div>
                             <div className="panel-body">
                               <AddItemForm activity={this.state.activity} perspective={this.state.perspective}
                                          position={this.state.count} submissionschanged={this.loadItemsFromServer.bind(this)} pollInterval={this.props.pollInterval}/>
@@ -584,7 +587,7 @@ class PerspectiveComponent extends React.Component {
                               </ul>
                               <br/>
                               <a href={"/perspectivesX/display_perspective_items/" + this.state.activity.id + "/" + this.state.perspective + "/" + resource_link_id +"/"}
-                                 className="btn btn-primary btn-block">View other students submissions</a>
+                                 className="btn btn-primary btn-block">View other {`learners'`} submissions</a>
                             </div>
                         </div>
                     </div>
@@ -694,7 +697,7 @@ class PerspectiveGridComponent extends React.Component {
 
     mapPerspectives(perspective) {
         return <PerspectiveComponent activity={this.state.activity} perspective={perspective.id} name={perspective.name}
-                                     activityName={this.state.activity.title} key={perspective.id}
+                                     activityName={this.state.activity.title} icon={perspective.icon_small} key={perspective.id}
                                      pollInterval={this.props.pollInterval} scorechangeHandler={this.scorechangeHandler}/>;
     }
 }
