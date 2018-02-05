@@ -78,12 +78,12 @@ class ActivityForm(forms.ModelForm):
         self.helper.layout = Layout(
             HTML('<div class="form-group"><label class="control-label control-label col-sm-2">Activity ID:</label><div class="controls col-sm-10">' + str(activity_id) + '</div></div>'),
             Fieldset(
-            "",'title','description','template','perspective_terminology', 'item_terminology',
+            "",'title','description','template',
             FormActions(
                 HTML("OR &emsp; "),
                 StrictButton("Create Custom Template", name="create template",
                             value="create template",css_class= 'create-template')),
-           'perspective_selection','view_knowledge_base_before_sumbmission','enable_search',
+           'perspective_selection','view_knowledge_base_before_sumbmission','enable_search','perspective_terminology', 'item_terminology',
             PrependedText('contribution_score', '%', active=True),
             PrependedText('curation_score','%',active= True),'minimum_contributions','minimum_curations'
              ),

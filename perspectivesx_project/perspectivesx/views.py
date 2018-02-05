@@ -253,9 +253,13 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
             context_dict['formset'] = formset
 
         else:  # When form is submited generate the form from the activity and template name
-            form = LearnerForm(request.POST, perspective=perspective, activity=activity, user=user.username,
+            #form = LearnerForm(request.POST, perspective=perspective, activity=activity, user=user.username,
+            #                   instance=instance)
+            form = LearnerForm(request.POST, perspective=request.POST.get('selected_perspective'), activity=activity, user=user.username,
                                instance=instance)
             context_dict['form'] = form
+            #print(request.POST)
+            #print(perspective)
             # if form is valid
             if form.is_valid():
                 # retrive submission meta
@@ -311,7 +315,7 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
                     # Something went wrong when validating the formset remove the submission
                     submission.delete()
                     #print("random submission error")
-                    print(formset.errors)
+                    #print(formset.errors)
                     input_form_set = modelformset_factory(LearnerSubmissionItem, form=LearnerSubmissionItemForm,
                                                           extra=extra)
                     formset = input_form_set(queryset=pre_existing_answers)
@@ -322,7 +326,8 @@ def student_submission(request, resource_link_id, activity_id, extra=0, perspect
 
                 formset = input_form_set(request.POST, queryset=pre_existing_answers)
                 context_dict['formset'] = formset
-                print(form.errors)
+                #print("random submission error2")
+                #print(form.errors)
 
     else:
 
