@@ -51,7 +51,7 @@ class ScoreComponent extends React.Component {
         return (
           <div id="score_pnl" className="pull-right">
             <ul className="breadcrumb">
-            Score: {this.props.score}
+            Score: <a href="#" title={`Participation Score: ${this.props.participation_score}%, Curation Score: ${this.props.curation_score}%`}>{this.props.score}%</a>
             </ul>
           </div>
         )
@@ -506,7 +506,9 @@ class PerspectiveComponent extends React.Component {
             cache: false,
             success: function (data) {
               var object = data['0'];
-              this.props.scorechangeHandler(object['total_grade']);
+              console.log("grade:");
+              console.log(data);
+              this.props.scorechangeHandler(object['total_grade'], object['participation_grade'], object['curation_grade']);
                 /*
 
                 alert("Submission updated ! \n" +
@@ -613,12 +615,14 @@ class PerspectiveComponent extends React.Component {
 class PerspectiveGridComponent extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {perspectives: [], activity: props.activity, score: 0};
+        this.state = {perspectives: [], activity: props.activity, score: 0, participation_score: 0, curation_score: 0};
         this.scorechangeHandler = this.scorechangeHandler.bind(this);
     }
 
-    scorechangeHandler(value) {
-      this.setState({ score: value })
+    scorechangeHandler(value, participation_score, curation_score) {
+      this.setState({ score: value });
+      this.setState({ participation_score: participation_score });
+      this.setState({ curation_score: curation_score });
     }
 
     loadPerspectivesFromServer() {
@@ -677,7 +681,7 @@ class PerspectiveGridComponent extends React.Component {
             return (
 
                 <div className="row">
-                    <ScoreComponent score={this.state.score} />
+                    <ScoreComponent score={this.state.score} participation_score={this.state.participation_score} curation_score={this.state.curation_score} />
                     <div>
                         <h3>{this.state.activity.title}</h3>
                         <div>{this.state.activity.description}</div>

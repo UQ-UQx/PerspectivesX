@@ -745,6 +745,11 @@ class GetSubmissionScore(generics.ListAPIView):
         total_grade = ((participation_grade * activity.contribution_score) / 100) + (
             (curation_grade * activity.curation_score) / 100)
 
+        # calculate participation_grade
+        participation_grade = (participation_grade * activity.contribution_score) / 100
+        # calculate contribution grade
+        curation_grade = (curation_grade * activity.curation_score) / 100
+
         #score,created = SubmissionScore.objects.get_or_create(user=self.learner_submission.created_by.id);
 
         submission_obj, created = SubmissionScore.objects.get_or_create(user=user);
